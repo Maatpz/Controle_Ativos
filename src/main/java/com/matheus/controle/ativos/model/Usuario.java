@@ -1,6 +1,9 @@
 package com.matheus.controle.ativos.model;
 
+import java.time.LocalDate;
 import java.util.UUID;
+
+import org.hibernate.annotations.CreationTimestamp;
 
 import com.matheus.controle.ativos.model.enums.Role;
 
@@ -42,5 +45,9 @@ public class Usuario {
     private Boolean ativo = true;
 
     private Role role = Role.ADMIN;
+
+    @Column(name = "created_at")
+    @CreationTimestamp
+    private LocalDate createdAt;
     
 }
