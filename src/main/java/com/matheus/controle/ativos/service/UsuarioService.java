@@ -2,6 +2,7 @@ package com.matheus.controle.ativos.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +21,9 @@ public class UsuarioService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    public Optional<Usuario> findById (UUID id){
+        return usuarioRepository.findById(id);
+    }
 
     public List<Usuario>findAll(){
         return usuarioRepository.findAll();
@@ -54,5 +58,66 @@ public class UsuarioService {
         
     }
 
+
+    public Usuario updateUsuario(UUID id, Usuario usuarioAtualizado){
+
+        Optional<Usuario> usuarioExistente = findById(id);
+        if(usuarioExistente.isPresent()){
+            
+            Usuario usuario = usuarioExistente.get();
+
+            if (usuarioAtualizado.getUsername() != null && !usuarioAtualizado.getUsername().equals(usuario.getUsername())) {
+                if (existsByUsername(usuarioAtualizado.getUsername())) {
+                    throw new RuntimeException("Username já existe: " + usuarioAtualizado.getUsername());
+                }
+                usuario.setUsername(usuarioAtualizado.getUsername());
+
+            }
+
+            if (usuarioAtualizado.getNome() != null) {
+                usuario.setNome(usuarioAtualizado.getNome());
+            }
+            
+            if (usuarioAtualizado.getPassword() != null && !usuarioAtualizado.getPassword().isEmpty()) {
+                usuario.setPassword(passwordEncoder.encode(usuarioAtualizado.getPassword()));
+            }
+            
+            if (usuarioAtualizado.getRole() != null) {
+                usuario.setRole(usuarioAtualizado.getRole());
+            }
+            
+            if (usuarioAtualizado.getAtivo() != null) {
+                usuario.setAtivo(usuarioAtualizado.getAtivo());
+            }
+            return usuarioRepository.save(usuario);
+        }
+        return null;
+    }
+
+    public void deleteById(UUID id) {
+        usuarioRepository.deleteById(id);
+    }
+
+    public boolean existsById(UUID id) {
+        return usuarioRepository.existsById(id);
+    }
+
+    public boolean validateCredentials(String username, String password) {
+        Optional<Usuario> usuario = findByUsernameAndAtivo(username, true);
+        if (usuario.isPresent()) {
+            return passwordEncoder.matches(password, usuario.get().getPassword());
+        }
+        return false;
+    }
+
+    //Adiantando
+    //Pode ser q seja usado
+
+    // public void initializeDefaultAdmin() {
+    //     if (!existsByUsername("infrateste")) {
+    //         createUsuario("infrateste", "L@157", "Admin", Role.ADMIN);
+    //         // createUsuario("outro", "admin123", "Admin", Role.ADMIN);
+    //     }
+    // }
 
 }
