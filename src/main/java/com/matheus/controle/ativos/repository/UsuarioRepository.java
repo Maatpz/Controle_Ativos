@@ -9,6 +9,8 @@ import com.matheus.controle.ativos.model.Usuario;
 
 public interface UsuarioRepository extends JpaRepository <Usuario, UUID> {
 
+    Optional<Usuario> finById (UUID id);
+
     Optional<Usuario> findByUsername (String username);
 
     boolean existsByUsername(String username);
