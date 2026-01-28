@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.matheus.controle.ativos.model.Ativo;
+import com.matheus.controle.ativos.model.enums.Status;
 
 public interface AtivoRepository extends JpaRepository <Ativo, UUID>{
 
@@ -21,6 +22,8 @@ public interface AtivoRepository extends JpaRepository <Ativo, UUID>{
     List<Ativo> findBySetorContainingIgnoreCase(String setor);
 
     List<Ativo> findByLocalidadeContainingIgnoreCase(String localidade); 
+
+    List<Ativo>findByMultipleFields(String nomeAtivo, String responsavel, String patrimonio, String categoria, String setor, Status status);
 
 }
 
