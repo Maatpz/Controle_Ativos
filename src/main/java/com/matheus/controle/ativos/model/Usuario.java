@@ -17,14 +17,16 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
 
 @Entity
 @Table(name= "tb_usuarios")
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 public class Usuario {
+
+    public Usuario(String username, String password, String nome, Role role) {
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
