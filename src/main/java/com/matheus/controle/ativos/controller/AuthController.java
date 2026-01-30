@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import com.matheus.controle.ativos.model.Usuario;
 import com.matheus.controle.ativos.service.UsuarioService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
@@ -20,7 +21,8 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
-// @CrossOrigin(origins = "*")
+@Tag(name = "Autenticação", description = "API de autenticação")
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     @Autowired
