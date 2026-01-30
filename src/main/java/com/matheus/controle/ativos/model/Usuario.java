@@ -15,17 +15,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
-
 @Entity
-@Table(name= "tb_usuarios")
+@Table(name = "tb_usuarios")
 @Data
-@AllArgsConstructor
 public class Usuario {
 
     public Usuario(String username, String password, String nome, Role role) {
+    }
+
+    public Usuario() {
     }
 
     @Id
@@ -51,5 +51,5 @@ public class Usuario {
     @Column(name = "created_at")
     @CreationTimestamp
     private LocalDate createdAt;
-    
+
 }
