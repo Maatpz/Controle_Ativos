@@ -17,7 +17,7 @@ public interface AtivoRepository extends JpaRepository<Ativo, UUID> {
 
         List<Ativo> findByResponsavelContainingIgnoreCase(String responsavel);
 
-        Optional<Ativo> finByPatrimonio(String patrimonio);
+        Optional<Ativo> findByPatrimonio(String patrimonio);
 
         // List<Ativo> findByCategoriaContainingIgnoreCase(String categoria);
 
