@@ -8,26 +8,26 @@ public class WebController {
 
     @GetMapping("/")
     public String index() {
-        return "index";
+        return "forward:/index.html";
     }
 
     @GetMapping("/login")
     public String login() {
-        return "login";
+        return "forward:/login.html";
     }
 
     @GetMapping("/cadastro")
     public String cadastro() {
-        return "cadastro";
+        return "forward:/cadastro.html";
     }
 
     @GetMapping("/editar")
     public String editar() {
-        return "editar";
+        return "forward:/editar.html";
     }
 
     @GetMapping("/visualizar")
     public String visualizar() {
-        return "visualizar";
+        return "forward:/visualizar.html";
     }
 }
