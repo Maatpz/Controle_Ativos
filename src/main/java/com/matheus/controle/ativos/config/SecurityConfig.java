@@ -20,29 +20,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf().disable()
-                .authorizeHttpRequests()
-                // .antMatchers("/login", "/css/**", "/js/**", "/images/**",
-                // "/h2-console/**").permitAll()
-                .antMatchers("/auth/**").permitAll()
-                .anyRequest().authenticated() // Exigir autenticação para outras rotas
-                .and()
-                .formLogin()
-                .loginPage("/login")
-                .defaultSuccessUrl("/", true)
-                .failureUrl("/login?error=true")
-                .permitAll()
-                .and()
-                .logout()
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout=true")
-                .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
-                .permitAll()
-                .and();
-        // h2 console config teste
-        // .headers()
-        // .frameOptions().sameOrigin();
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .anyRequest().authenticated())
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin())) // Allow H2 console frames
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/", true)
+                        .failureUrl("/login?error=true")
+                        .permitAll())
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout=true")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .permitAll());
 
         return http.build();
     }
