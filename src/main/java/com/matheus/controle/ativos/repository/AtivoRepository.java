@@ -5,25 +5,44 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.matheus.controle.ativos.model.Ativo;
 import com.matheus.controle.ativos.model.enums.Status;
 
-public interface AtivoRepository extends JpaRepository <Ativo, UUID>{
+public interface AtivoRepository extends JpaRepository<Ativo, UUID> {
 
-    List<Ativo> findByNomeAtivoContainingIgnoreCase(String nomeAtivo);
-    
-    List<Ativo> findByResponsavelContainingIgnoreCase(String responsavel); 
+        List<Ativo> findByNomeAtivoContainingIgnoreCase(String nomeAtivo);
 
-    Optional<Ativo> finByPatrimonio (String patrimonio);
+        List<Ativo> findByResponsavelContainingIgnoreCase(String responsavel);
 
-    List<Ativo> findByCategoriaContainingIgnoreCase(String categoria); 
+        Optional<Ativo> finByPatrimonio(String patrimonio);
 
-    List<Ativo> findBySetorContainingIgnoreCase(String setor);
+        // List<Ativo> findByCategoriaContainingIgnoreCase(String categoria);
 
-    List<Ativo> findByLocalidadeContainingIgnoreCase(String localidade); 
+        List<Ativo> findBySetorContainingIgnoreCase(String setor);
 
-    List<Ativo>findByMultipleFields(String nomeAtivo, String responsavel, String patrimonio, String categoria, String setor, Status status);
+        List<Ativo> findByLocalidadeContainingIgnoreCase(String localidade);
 
+        List<Ativo> findByStatus(Status status);
+
+        @Query("SELECT a FROM Ativo a WHERE " +
+                        "(:nomeAtivo IS NULL OR LOWER(a.nomeAtivo) LIKE LOWER(CONCAT('%', :nomeAtivo, '%'))) AND " +
+                        "(:responsavel IS NULL OR LOWER(a.responsavel) LIKE LOWER(CONCAT('%', :responsavel, '%'))) AND "
+                        +
+                        "(:patrimonio IS NULL OR LOWER(a.patrimonio) LIKE LOWER(CONCAT('%', :patrimonio, '%'))) AND " +
+                        "(:setor IS NULL OR LOWER(a.setor) LIKE LOWER(CONCAT('%', :setor, '%')))")
+        List<Ativo> findByMultipleFields(@Param("nomeAtivo") String nomeAtivo,
+                        @Param("responsavel") String responsavel,
+                        @Param("patrimonio") String patrimonio,
+                        @Param("setor") String setor,
+                        @Param("status") Status status);
+
+        @Query("SELECT a FROM Ativo a WHERE " +
+                        "LOWER(a.nomeAtivo) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+                        "LOWER(a.responsavel) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+                        "LOWER(a.patrimonio) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+                        "LOWER(a.setor) LIKE LOWER(CONCAT('%', :termo, '%'))")
+        List<Ativo> findByTermoGeral(@Param("termo") String termo);
 }
-
