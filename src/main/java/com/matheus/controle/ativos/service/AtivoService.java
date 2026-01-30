@@ -46,7 +46,7 @@ public class AtivoService {
     }
 
     public Optional<Ativo> findByPatrimonio(String patrimonio) {
-        return ativoRepository.finByPatrimonio(patrimonio);
+        return ativoRepository.findByPatrimonio(patrimonio);
     }
 
     public List<Ativo> findByStatus(Status status) {
