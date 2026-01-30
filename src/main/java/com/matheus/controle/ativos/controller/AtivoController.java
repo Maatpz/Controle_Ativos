@@ -6,6 +6,8 @@ import com.matheus.controle.ativos.model.Ativo;
 import com.matheus.controle.ativos.model.enums.Status;
 import com.matheus.controle.ativos.service.AtivoService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,8 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/ativos")
+@Tag(name = "Ativos", description = "API de gerenciamento de ativos")
+@CrossOrigin(origins = "*")
 public class AtivoController {
 
     @Autowired
