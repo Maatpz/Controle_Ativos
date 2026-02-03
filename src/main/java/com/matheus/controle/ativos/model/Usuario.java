@@ -23,6 +23,10 @@ import lombok.Data;
 public class Usuario {
 
     public Usuario(String username, String password, String nome, Role role) {
+        this.username = username;
+        this.password = password;
+        this.nome = nome;
+        this.role = role;
     }
 
     public Usuario() {
@@ -38,7 +42,7 @@ public class Usuario {
     private String username;
 
     @NotBlank(message = "Senha obrigatória")
-    @Size(min = 6, message = "Senha deve ter no minimo 6 caracteres")
+    @Size(min = 4, message = "Senha deve ter no minimo 6 caracteres")
     @Column
     private String password;
 
