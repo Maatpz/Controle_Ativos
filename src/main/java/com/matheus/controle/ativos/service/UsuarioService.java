@@ -114,7 +114,7 @@ public class UsuarioService {
 
     public void initializeDefaultAdmin() {
         if (!existsByUsername("infrateste")) {
-            createUsuario("infrateste", "L@1570", "Admin", Role.ADMIN);
+            createUsuario("infrateste", "admin12345", "Admin", Role.ADMIN);
             // createUsuario("outro", "admin123", "Admin", Role.ADMIN);
         }
     }
