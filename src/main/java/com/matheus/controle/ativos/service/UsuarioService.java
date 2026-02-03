@@ -109,21 +109,14 @@ public class UsuarioService {
         }
         return false;
     }
-
-    public void initializeDefaultAdmin() {
-        if (!existsByUsername("infrateste")) {
-            createUsuario("infrateste", "L@157", "Admin", Role.ADMIN);
-        }
-    }
-
     // Adiantando
     // Pode ser q seja usado
 
-    // public void initializeDefaultAdmin() {
-    // if (!existsByUsername("infrateste")) {
-    // createUsuario("infrateste", "L@157", "Admin", Role.ADMIN);
-    // // createUsuario("outro", "admin123", "Admin", Role.ADMIN);
-    // }
-    // }
+    public void initializeDefaultAdmin() {
+        if (!existsByUsername("infrateste")) {
+            createUsuario("infrateste", "L@157", "Admin", Role.ADMIN );
+            // createUsuario("outro", "admin123", "Admin", Role.ADMIN);
+        }
+    }
 
 }
