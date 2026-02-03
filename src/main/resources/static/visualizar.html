@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Ativo - Controle de Ativos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo"><i class="fas fa-cube"></i> AtivosManager</a>
+        <div class="nav-links">
+            <a href="/" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Voltar</a>
+        </div>
+    </nav>
+
+    <div class="container fade-in">
+        <div class="glass-card" style="max-width: 800px; margin: 0 auto;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+                <div>
+                    <h1 id="view-nome" style="margin-bottom: 0.5rem;">Carregando...</h1>
+                    <span id="view-status" class="badge">...</span>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div>
+                    <label>Patrimônio</label>
+                    <p id="view-patrimonio" style="font-size: 1.1rem; color: var(--text-primary); font-weight: 500;">-
+                    </p>
+                </div>
+
+                <div>
+                    <label>Localidade</label>
+                    <p id="view-local" style="font-size: 1.1rem; color: var(--text-primary); font-weight: 500;">-</p>
+                </div>
+
+                <div>
+                    <label>Setor</label>
+                    <p id="view-setor" style="font-size: 1.1rem; color: var(--text-primary); font-weight: 500;">-</p>
+                </div>
+
+                <div>
+                    <label>Responsável</label>
+                    <p id="view-responsavel" style="font-size: 1.1rem; color: var(--text-primary); font-weight: 500;">-
+                    </p>
+                </div>
+            </div>
+
+            <div
+                style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
+                <a href="/" class="btn btn-primary">Ok</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/script.js"></script>
+</body>
+
+</html>

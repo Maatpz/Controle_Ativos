@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Ativos</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo">
+            <i class="fas fa-cube"></i> Controle-Ativos
+        </a>
+        <div class="nav-links">
+            <span id="user-display">Usuário</span>
+            <a href="#" id="logout-btn" class="nav-link"><i class="fas fa-sign-out-alt"></i> Sair</a>
+        </div>
+    </nav>
+
+    <div class="container fade-in">
+        <div class="glass-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h1>Meus Ativos</h1>
+                <a href="/cadastro" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Novo Ativo
+                </a>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-total">0</div>
+                    <div class="stat-label">Total de Ativos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-operacional">0</div>
+                    <div class="stat-label">Operacionais</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-estoque">0</div>
+                    <div class="stat-label">Em Estoque</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-reservado">0</div>
+                    <div class="stat-label">Reservados</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div style="position: relative;">
+                    <i class="fas fa-search"
+                        style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                    <input type="text" id="search" placeholder="Buscar por nome, patrimônio ou responsável..."
+                        style="padding-left: 2.5rem;">
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Patrimônio</th>
+                            <th>Status</th>
+                            <th>Localidade</th>
+                            <th>Responsável</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Content populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="pagination-controls" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem;">
+                <button id="prev-page" class="btn btn-secondary btn-sm" disabled>
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </button>
+                <span id="page-info" style="color: var(--text-primary); font-weight: 500;">Página 1 de 1</span>
+                <button id="next-page" class="btn btn-secondary btn-sm" disabled>
+                    Próximo <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/script.js"></script>
+</body>
+
+</html>

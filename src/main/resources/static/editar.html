@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Ativo - Controle de Ativos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo"><i class="fas fa-cube"></i> AtivosManager</a>
+        <div class="nav-links">
+            <a href="/" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Voltar</a>
+        </div>
+    </nav>
+
+    <div class="container fade-in">
+        <div class="glass-card" style="max-width: 800px; margin: 0 auto;">
+            <h1>Editar Ativo</h1>
+            <p style="margin-bottom: 2rem;">Atualize as informações do ativo.</p>
+
+            <form>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="nomeAtivo">Nome do Ativo *</label>
+                        <input type="text" id="nomeAtivo" name="nomeAtivo" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="patrimonio">Patrimônio *</label>
+                        <input type="text" id="patrimonio" name="patrimonio" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status" name="status">
+                            <option value="OPERACIONAL">Operacional</option>
+                            <option value="ESTOQUE">Estoque</option>
+                            <option value="MANUTENCAO">Manutenção</option>
+                            <option value="RESERVADO">Reservado</option>
+                            <option value="EXTRAVIADO">Extraviado</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="localidade">Localidade</label>
+                        <input type="text" id="localidade" name="localidade">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="setor">Setor</label>
+                        <input type="text" id="setor" name="setor">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="responsavel">Responsável</label>
+                        <input type="text" id="responsavel" name="responsavel">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2rem; justify-content: flex-end;">
+                    <a href="/" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Atualizar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/script.js"></script>
+</body>
+
+</html>
