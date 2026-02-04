@@ -22,22 +22,37 @@ public class AtivoService {
     }
 
     public Optional<Ativo> findById(UUID id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Id não pode ser nulo");
+        }
         return ativoRepository.findById(id);
     }
 
     public Ativo save(Ativo ativo) {
+        if (ativo == null) {
+            throw new IllegalArgumentException("Ativo não pode ser nulo");
+        }
         return ativoRepository.save(ativo);
     }
 
     public void deleteById(UUID id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Id não pode ser nulo");
+        }
         ativoRepository.deleteById(id);
     }
 
     public boolean existsById(UUID id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Id não pode ser nulo");
+        }
         return ativoRepository.existsById(id);
     }
 
     public List<Ativo> findByNome(String nomeAtivo) {
+        if (nomeAtivo == null) {
+            throw new IllegalArgumentException("Nome não pode ser nulo");
+        }
         return ativoRepository.findByNomeAtivoContainingIgnoreCase(nomeAtivo);
     }
 

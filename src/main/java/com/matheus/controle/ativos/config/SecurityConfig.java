@@ -24,6 +24,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/html/**", "/index.html", "/login.html", "/cadastro.html", "/editar.html",
+                                "/visualizar.html", "/js/**", "/css/**", "/img/**")
+                        .permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .anyRequest().authenticated())
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin())) // Allow H2 console frames

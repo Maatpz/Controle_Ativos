@@ -22,6 +22,9 @@ public class UsuarioService {
     private PasswordEncoder passwordEncoder;
 
     public Optional<Usuario> findById(UUID id) {
+        if (id == null) {
+            throw new RuntimeException("Id não pode ser nulo");
+        }
         return usuarioRepository.findById(id);
     }
 
@@ -95,10 +98,16 @@ public class UsuarioService {
     }
 
     public void deleteById(UUID id) {
+        if (id == null) {
+            throw new RuntimeException("Id não pode ser nulo");
+        }
         usuarioRepository.deleteById(id);
     }
 
     public boolean existsById(UUID id) {
+        if (id == null) {
+            throw new RuntimeException("Id não pode ser nulo");
+        }
         return usuarioRepository.existsById(id);
     }
 
