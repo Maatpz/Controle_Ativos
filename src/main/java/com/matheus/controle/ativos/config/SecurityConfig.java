@@ -29,7 +29,7 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .anyRequest().authenticated())
-                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin())) // Allow H2 console frames
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin())) 
                 .formLogin(form -> form
                         .loginPage("/login")
                         .defaultSuccessUrl("/", true)

@@ -1,8 +1,3 @@
-/**
- * Cliente API - Controle de Ativos
- * Base URL relativa ao mesmo origin (Spring Boot serve front e API).
- * credentials: 'include' envia o cookie JSESSIONID para autenticação.
- */
 const API = {
   base: '',
   opts(method, body) {
