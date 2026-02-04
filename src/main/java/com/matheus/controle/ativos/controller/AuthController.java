@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextImpl;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 
 import com.matheus.controle.ativos.model.Usuario;
@@ -54,6 +56,9 @@ public class AuthController {
 
                 Authentication auth = new UsernamePasswordAuthenticationToken(username, null, null);
                 SecurityContextHolder.getContext().setAuthentication(auth);
+                // Persistir na sessão para o próximo request (evita loop login -> / -> login)
+                session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                        new SecurityContextImpl(auth));
 
                 response.put("success", true);
                 response.put("message", "Login realizado com sucesso");
@@ -96,14 +101,16 @@ public class AuthController {
 
         if (session != null && session.getAttribute("username") != null) {
             String username = (String) session.getAttribute("username");
-            Long userId = (Long) session.getAttribute("userId");
+            Object userIdAttr = session.getAttribute("userId");
             String role = (String) session.getAttribute("role");
+            String userId = userIdAttr != null ? userIdAttr.toString() : null;
 
             response.put("authenticated", true);
-            response.put("user", Map.of(
-                    "id", userId,
-                    "username", username,
-                    "role", role));
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("id", userId);
+            userData.put("username", username);
+            userData.put("role", role);
+            response.put("user", userData);
         } else {
             response.put("authenticated", false);
         }
