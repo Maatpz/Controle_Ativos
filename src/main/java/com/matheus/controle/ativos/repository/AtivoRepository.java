@@ -29,10 +29,10 @@ public interface AtivoRepository extends JpaRepository<Ativo, UUID> {
 
         @Query("SELECT a FROM Ativo a WHERE " +
                         "(:nomeAtivo IS NULL OR LOWER(a.nomeAtivo) LIKE LOWER(CONCAT('%', :nomeAtivo, '%'))) AND " +
-                        "(:responsavel IS NULL OR LOWER(a.responsavel) LIKE LOWER(CONCAT('%', :responsavel, '%'))) AND "
-                        +
+                        "(:responsavel IS NULL OR LOWER(a.responsavel) LIKE LOWER(CONCAT('%', :responsavel, '%'))) AND " +
                         "(:patrimonio IS NULL OR LOWER(a.patrimonio) LIKE LOWER(CONCAT('%', :patrimonio, '%'))) AND " +
-                        "(:setor IS NULL OR LOWER(a.setor) LIKE LOWER(CONCAT('%', :setor, '%')))")
+                        "(:setor IS NULL OR LOWER(a.setor) LIKE LOWER(CONCAT('%', :setor, '%'))) AND " +
+                        "(:status IS NULL OR a.status = :status)")
         List<Ativo> findByMultipleFields(@Param("nomeAtivo") String nomeAtivo,
                         @Param("responsavel") String responsavel,
                         @Param("patrimonio") String patrimonio,
@@ -43,6 +43,7 @@ public interface AtivoRepository extends JpaRepository<Ativo, UUID> {
                         "LOWER(a.nomeAtivo) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
                         "LOWER(a.responsavel) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
                         "LOWER(a.patrimonio) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-                        "LOWER(a.setor) LIKE LOWER(CONCAT('%', :termo, '%'))")
+                        "LOWER(a.setor) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+                        "LOWER(a.localidade) LIKE LOWER(CONCAT('%', :termo, '%'))")
         List<Ativo> findByTermoGeral(@Param("termo") String termo);
 }
