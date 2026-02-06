@@ -1,7 +1,4 @@
-/**
- * Lógica por página - Controle de Ativos (fullstack)
- * Detecta a página pela URL e executa a função correspondente.
- */
+
 (function () {
   const path = window.location.pathname.replace(/\/$/, '') || '/';
   const isLogin = path === '/login' || path.endsWith('login.html');
@@ -28,7 +25,7 @@
       const st = await API.getAuthStatus();
       if (st && st.authenticated) return st;
     } catch (_) {
-      // Falha na API (ex.: 500) → trata como não autenticado
+    
     }
     redirectLogin();
     return false;
@@ -43,7 +40,7 @@
         return;
       }
     } catch (_) {
-      // Falha em /auth/status; segue mostrando o formulário
+      
     }
     const form = document.querySelector('form');
     if (!form) return;
@@ -77,7 +74,7 @@
           return;
         }
 
-        // Só redireciona quando a sessão estiver visível (evita loop)
+        // Só redireciona quando a sessão estiver visível
         for (let i = 0; i < 10; i++) {
           await new Promise(r => setTimeout(r, 150));
           try {
