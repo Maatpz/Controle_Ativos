@@ -50,7 +50,11 @@ public class AuthController {
                 session.setAttribute("userId", usuario.getId());
                 session.setAttribute("role", usuario.getRole().name());
 
-                Authentication auth = new UsernamePasswordAuthenticationToken(username, null, null);
+                java.util.List<org.springframework.security.core.GrantedAuthority> authorities = java.util.List.of(
+                        new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                                "ROLE_" + usuario.getRole().name()));
+
+                Authentication auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(auth);
 
                 session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
