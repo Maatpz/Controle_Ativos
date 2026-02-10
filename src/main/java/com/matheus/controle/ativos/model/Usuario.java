@@ -43,7 +43,7 @@ public class Usuario {
     private String username;
 
     @NotBlank(message = "Senha obrigatória")
-    @Size(min = 4, message = "Senha deve ter no minimo 6 caracteres")
+    @Size(min = 4, message = "Senha deve ter no minimo 4 caracteres")
     private String password;
 
     private String nome;
