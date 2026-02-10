@@ -12,7 +12,7 @@ const API = {
 
   // --- Auth ---
   async login(username, password) {
-    const res = await fetch(`${this.base}/auth/login`, this.opts('POST', { username, password }));
+    const res = await fetch(`${this.base}/api/auth/login`, this.opts('POST', { username, password }));
     if (!res.ok) {
       const text = await res.text();
       try {
@@ -25,11 +25,11 @@ const API = {
     return res.json();
   },
   async logout() {
-    const res = await fetch(`${this.base}/auth/logout`, this.opts('POST'));
+    const res = await fetch(`${this.base}/api/auth/logout`, this.opts('POST'));
     return res.json();
   },
   async getAuthStatus() {
-    const res = await fetch(`${this.base}/auth/status`, { method: 'GET', credentials: 'include' });
+    const res = await fetch(`${this.base}/api/auth/status`, { method: 'GET', credentials: 'include' });
     return res.json();
   },
 

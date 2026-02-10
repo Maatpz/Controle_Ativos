@@ -31,7 +31,7 @@ public class SecurityConfig {
                                                                 "/cadastro.html", "/editar.html",
                                                                 "/visualizar.html", "/js/**", "/css/**", "/img/**")
                                                 .permitAll()
-                                                .requestMatchers("/auth/**").permitAll()
+                                                .requestMatchers("/api/auth/**").permitAll()
                                                 .anyRequest().authenticated())
                                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                                 .formLogin(form -> form

@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 @Tag(name = "Autenticação", description = "API de autenticação")
 @CrossOrigin(origins = "*")
 public class AuthController {
