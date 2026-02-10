@@ -64,6 +64,7 @@ public class AtivoController {
         }
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAtivo(@PathVariable UUID id) {
         try {
