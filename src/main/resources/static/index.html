@@ -23,47 +23,57 @@
             <i class="fas fa-cube"></i> Controle-Ativos
         </a>
         <div class="nav-links">
-            <span id="user-display">Usuário</span>
+            <div class="user-info">
+                <span class="user-avatar" id="user-avatar">U</span>
+                <span id="user-display">Usuário</span>
+            </div>
             <a href="#" id="logout-btn" class="nav-link"><i class="fas fa-sign-out-alt"></i> Sair</a>
         </div>
     </nav>
 
     <div class="container fade-in">
         <div class="glass-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <h1>Ativos</h1>
+            <header class="page-header">
+                <div class="page-header-text">
+                    <h1>Ativos</h1>
+                    <p class="page-subtitle">Gerencie e monitore todos os ativos da sua organização.</p>
+                </div>
                 <a href="/cadastro" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Novo Ativo
                 </a>
-            </div>
+            </header>
 
-           
             <div class="stats-grid">
-                <div class="stat-card">
+                <div class="stat-card stat-card-total">
+                    <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
                     <div class="stat-value" id="stat-total">0</div>
                     <div class="stat-label">Total de Ativos</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card stat-card-operacional">
+                    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
                     <div class="stat-value" id="stat-operacional">0</div>
                     <div class="stat-label">Operacionais</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card stat-card-estoque">
+                    <div class="stat-icon"><i class="fas fa-box"></i></div>
                     <div class="stat-value" id="stat-estoque">0</div>
                     <div class="stat-label">Em Estoque</div>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card stat-card-manutencao">
+                    <div class="stat-icon"><i class="fas fa-wrench"></i></div>
                     <div class="stat-value" id="stat-manutencao">0</div>
                     <div class="stat-label">Em Manutenção</div>
                 </div>
             </div>
 
-            <div class="form-group">
-                <div style="position: relative;">
-                    <i class="fas fa-search"
-                        style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
-                    <input type="text" id="search" placeholder="Buscar por nome, patrimônio, responsável, setor ou localidade..."
-                        style="padding-left: 2.5rem;">
-                </div>
+            <div class="search-wrap">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="search" class="search-input" placeholder="Buscar por nome, patrimônio, responsável, setor ou localidade...">
+            </div>
+
+            <div id="search-result-info" class="search-result-info" style="display: none;">
+                <i class="fas fa-filter"></i>
+                <span id="search-result-text"></span>
             </div>
 
             <div class="table-container">
@@ -80,19 +90,23 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 2rem;">Nenhum ativo encontrado.</td>
-                            
+                            <td colspan="6" class="empty-state-cell">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox empty-state-icon"></i>
+                                    <p class="empty-state-text">Nenhum ativo encontrado.</p>
+                                </div>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            
-            <div id="pagination-controls" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem;">
-                <button id="prev-page" class="btn btn-secondary btn-sm" disabled>
+
+            <div id="pagination-controls" class="pagination-controls">
+                <button id="prev-page" class="btn btn-secondary btn-sm pagination-btn" disabled>
                     <i class="fas fa-chevron-left"></i> Anterior
                 </button>
-                <span id="page-info" style="color: var(--text-primary); font-weight: 500;">Página 1 de 1</span>
-                <button id="next-page" class="btn btn-secondary btn-sm" disabled>
+                <span id="page-info" class="page-info">Página 1 de 1</span>
+                <button id="next-page" class="btn btn-secondary btn-sm pagination-btn" disabled>
                     Próximo <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
