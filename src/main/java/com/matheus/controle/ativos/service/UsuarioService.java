@@ -121,15 +121,38 @@ public class UsuarioService {
     // Adiantando
     // Pode ser q seja usado
 
-    @org.springframework.beans.factory.annotation.Value("${ADMIN_USERNAME:}")
+    @org.springframework.beans.factory.annotation.Value("${ADMIN_USERNAME:admin}")
     private String defaultAdminUsername;
 
-    @org.springframework.beans.factory.annotation.Value("${ADMIN_PASSWORD:}")
+    @org.springframework.beans.factory.annotation.Value("${ADMIN_PASSWORD:admin12345}")
     private String defaultAdminPassword;
 
     public void initializeDefaultAdmin() {
-        if (!existsByUsername(defaultAdminUsername)) {
+        Optional<Usuario> usuarioExistente = findByUsername(defaultAdminUsername);
+        if (usuarioExistente.isPresent()) {
+            Usuario usuario = usuarioExistente.get();
+            boolean changed = false;
+
+            // Garante que o usuário é ativo
+            if (usuario.getAtivo() == null || !usuario.getAtivo()) {
+                usuario.setAtivo(true);
+                changed = true;
+                System.out.println("Usuário " + defaultAdminUsername + " ativado.");
+            }
+
+            // Se a senha configurada via env var for diferente da do banco, atualiza
+            if (!passwordEncoder.matches(defaultAdminPassword, usuario.getPassword())) {
+                usuario.setPassword(passwordEncoder.encode(defaultAdminPassword));
+                changed = true;
+                System.out.println("Senha do usuário " + defaultAdminUsername + " atualizada conforme configuração.");
+            }
+
+            if (changed) {
+                usuarioRepository.save(usuario);
+            }
+        } else {
             createUsuario(defaultAdminUsername, defaultAdminPassword, "Admin", Role.ADMIN);
+            System.out.println("Usuário " + defaultAdminUsername + " criado com sucesso.");
         }
     }
 
