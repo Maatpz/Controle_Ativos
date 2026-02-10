@@ -30,13 +30,10 @@ public class SecurityConfig {
         .csrf(csrf -> csrf.disable())
         .cors(cors -> { })
         .authorizeHttpRequests(auth -> auth
-            // Preflight CORS
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
             .requestMatchers("/h2-console/**").permitAll()
             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-            // Rotas do "frontend" servido pelo próprio Spring
             .requestMatchers("/", "/login", "/cadastro", "/editar", "/visualizar").permitAll()
-            // Healthcheck simples
             .requestMatchers("/status").permitAll()
             .requestMatchers("/html/**", "/index.html", "/login.html", "/cadastro.html", "/editar.html",
                              "/visualizar.html", "/js/**", "/css/**", "/img/**").permitAll()
@@ -58,7 +55,6 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration config = new CorsConfiguration();
-                // Importante: com credentials, não pode usar origins="*"
                 config.setAllowedOriginPatterns(List.of("*"));
                 config.setAllowCredentials(true);
                 config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
