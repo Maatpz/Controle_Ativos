@@ -3,11 +3,14 @@ package com.matheus.controle.ativos.service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.matheus.controle.ativos.model.Ativo;
+import com.matheus.controle.ativos.model.dto.request.AtivoRequestDTO;
+import com.matheus.controle.ativos.model.dto.response.AtivoResponseDTO;
 import com.matheus.controle.ativos.model.enums.Status;
 import com.matheus.controle.ativos.repository.AtivoRepository;
 
@@ -16,6 +19,103 @@ public class AtivoService {
 
     @Autowired
     private AtivoRepository ativoRepository;
+
+    public AtivoResponseDTO toResponseDTO(Ativo ativo) {
+        AtivoResponseDTO dto = new AtivoResponseDTO();
+        dto.setId(ativo.getId());
+        dto.setNomeAtivo(ativo.getNomeAtivo());
+        dto.setStatus(ativo.getStatus());
+        dto.setLocalidade(ativo.getLocalidade());
+        dto.setSetor(ativo.getSetor());
+        dto.setResponsavel(ativo.getResponsavel());
+        dto.setPatrimonio(ativo.getPatrimonio());
+        return dto;
+    }
+
+    public Ativo toEntity(AtivoRequestDTO dto) {
+        Ativo ativo = new Ativo();
+        ativo.setNomeAtivo(dto.getNomeAtivo());
+        ativo.setStatus(dto.getStatus());
+        ativo.setLocalidade(dto.getLocalidade());
+        ativo.setSetor(dto.getSetor());
+        ativo.setResponsavel(dto.getResponsavel());
+        ativo.setPatrimonio(dto.getPatrimonio());
+        return ativo;
+    }
+
+    private List<AtivoResponseDTO> toResponseDTOList(List<Ativo> ativos) {
+        return ativos.stream().map(this::toResponseDTO).collect(Collectors.toList());
+    }
+
+
+    public AtivoResponseDTO criarAtivo(AtivoRequestDTO request) {
+        Ativo ativo = toEntity(request);
+        Ativo salvo = save(ativo);
+        return toResponseDTO(salvo);
+    }
+
+    public AtivoResponseDTO atualizarAtivo(UUID id, AtivoRequestDTO request) {
+        Optional<Ativo> ativoExistente = findById(id);
+        if (ativoExistente.isPresent()) {
+            Ativo ativo = ativoExistente.get();
+
+            // Atualização dos campos permitidos
+            if (request.getNomeAtivo() != null)
+                ativo.setNomeAtivo(request.getNomeAtivo());
+            if (request.getStatus() != null)
+                ativo.setStatus(request.getStatus());
+            if (request.getLocalidade() != null)
+                ativo.setLocalidade(request.getLocalidade());
+            if (request.getSetor() != null)
+                ativo.setSetor(request.getSetor());
+            if (request.getResponsavel() != null)
+                ativo.setResponsavel(request.getResponsavel());
+            if (request.getPatrimonio() != null)
+                ativo.setPatrimonio(request.getPatrimonio());
+
+            Ativo salvo = save(ativo);
+            return toResponseDTO(salvo);
+        }
+        return null;
+    }
+
+    public List<AtivoResponseDTO> findAllDTO() {
+        return toResponseDTOList(findAll());
+    }
+
+    public Optional<AtivoResponseDTO> findByIdDTO(UUID id) {
+        return findById(id).map(this::toResponseDTO);
+    }
+
+    public List<AtivoResponseDTO> findByNomeDTO(String nomeAtivo) {
+        return toResponseDTOList(findByNome(nomeAtivo));
+    }
+
+    public List<AtivoResponseDTO> findByResponsavelDTO(String responsavel) {
+        return toResponseDTOList(findByResponsavel(responsavel));
+    }
+
+    public Optional<AtivoResponseDTO> findByPatrimonioDTO(String patrimonio) {
+        return findByPatrimonio(patrimonio).map(this::toResponseDTO);
+    }
+
+    public List<AtivoResponseDTO> findByStatusDTO(Status status) {
+        return toResponseDTOList(findByStatus(status));
+    }
+
+    public List<AtivoResponseDTO> findBySetorDTO(String setor) {
+        return toResponseDTOList(findBySetor(setor));
+    }
+
+    public List<AtivoResponseDTO> findByTermoGeralDTO(String termo) {
+        return toResponseDTOList(findByTermoGeral(termo));
+    }
+
+    public List<AtivoResponseDTO> findByMultipleFieldsDTO(String nome, String responsavel,
+            String patrimonio, String setor, Status status) {
+        return toResponseDTOList(findByMultipleFields(nome, responsavel, patrimonio, setor, status));
+    }
+
 
     public List<Ativo> findAll() {
         return ativoRepository.findAll();
