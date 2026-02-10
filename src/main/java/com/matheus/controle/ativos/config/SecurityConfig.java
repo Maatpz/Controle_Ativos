@@ -18,34 +18,27 @@ public class SecurityConfig {
                 return new BCryptPasswordEncoder();
         }
 
-        @Bean
+       @Bean
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-                http
-                                .csrf(csrf -> csrf.disable())
-                                .authorizeHttpRequests(auth -> auth
-                                                .requestMatchers("/h2-console/**").permitAll()
-                                                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**",
-                                                                "/swagger-ui.html")
-                                                .permitAll()
-                                                .requestMatchers("/html/**", "/index.html", "/login.html",
-                                                                "/cadastro.html", "/editar.html",
-                                                                "/visualizar.html", "/js/**", "/css/**", "/img/**")
-                                                .permitAll()
-                                                .requestMatchers("/auth/**").permitAll()
-                                                .anyRequest().authenticated())
-                                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
-                                .formLogin(form -> form
-                                                .loginPage("/login")
-                                                .defaultSuccessUrl("/", true)
-                                                .failureUrl("/login?error=true")
-                                                .permitAll())
-                                .logout(logout -> logout
-                                                .logoutUrl("/logout")
-                                                .logoutSuccessUrl("/login?logout=true")
-                                                .invalidateHttpSession(true)
-                                                .deleteCookies("JSESSIONID")
-                                                .permitAll());
+        http
+        .csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/h2-console/**").permitAll()
+            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+            .requestMatchers("/html/**", "/index.html", "/login.html", "/cadastro.html", "/editar.html",
+                             "/visualizar.html", "/js/**", "/css/**", "/img/**").permitAll()
 
-                return http.build();
+            
+            .requestMatchers("/api/auth/**").permitAll()
+
+            .anyRequest().authenticated()
+        )
+        .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+
+        .formLogin(form -> form.disable())
+
+        .logout(logout -> logout.disable());
+
+        return http.build();
         }
 }

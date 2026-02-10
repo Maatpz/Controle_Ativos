@@ -33,7 +33,7 @@ public class AuthController {
     @Autowired
     private UsuarioService usuarioService;
 
-    @PostMapping("/api/auth/login")
+    @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO credentials,
             HttpServletRequest request) {
         String username = credentials.getUsername();
