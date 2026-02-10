@@ -102,6 +102,7 @@
   // ---------- INDEX (lista) ----------
   const PAGE_SIZE = 10;
   let allAtivos = [];
+  let allAtivosGlobal = [];
   let currentPage = 1;
 
   function statusLabel(s) {
@@ -109,11 +110,13 @@
     return map[s] || s;
   }
 
+  const emptyStateHtml = '<tr><td colspan="6" class="empty-state-cell"><div class="empty-state"><i class="fas fa-inbox empty-state-icon"></i><p class="empty-state-text">Nenhum ativo encontrado.</p></div></td></tr>';
+
   function renderTable(ativos) {
     const tbody = document.querySelector('.table-container tbody');
     if (!tbody) return;
     if (!ativos.length) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem;">Nenhum ativo encontrado.</td></tr>';
+      tbody.innerHTML = emptyStateHtml;
       return;
     }
     tbody.innerHTML = ativos.map(a => `
@@ -155,6 +158,19 @@
     if (el('stat-manutencao')) el('stat-manutencao').textContent = manutencao;
   }
 
+  function updateSearchResultInfo(termo, count) {
+    const box = document.getElementById('search-result-info');
+    const text = document.getElementById('search-result-text');
+    if (!box || !text) return;
+    if (!termo) {
+      box.style.display = 'none';
+      return;
+    }
+    const label = count === 1 ? '1 ativo encontrado' : `${count} ativos encontrados`;
+    text.textContent = `${label} para a busca.`;
+    box.style.display = 'flex';
+  }
+
   function paginate(list) {
     const start = (currentPage - 1) * PAGE_SIZE;
     return list.slice(start, start + PAGE_SIZE);
@@ -175,7 +191,8 @@
     try {
       await API.deleteAtivo(id);
       allAtivos = allAtivos.filter(a => a.id !== id);
-      updateStats(allAtivos);
+      allAtivosGlobal = allAtivosGlobal.filter(a => a.id !== id);
+      updateStats(allAtivosGlobal);
       renderTable(paginate(allAtivos));
       updatePagination(allAtivos.length);
     } catch (err) {
@@ -188,14 +205,20 @@
     if (!auth) return;
 
     const userEl = document.getElementById('user-display');
-    if (userEl && auth.user) userEl.textContent = auth.user.username || auth.user.nomeCompleto || 'Usuário';
+    const avatarEl = document.getElementById('user-avatar');
+    if (userEl && auth.user) {
+      const name = auth.user.username || auth.user.nomeCompleto || 'Usuário';
+      userEl.textContent = name;
+      if (avatarEl && name) avatarEl.textContent = name.charAt(0).toUpperCase();
+    }
 
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) logoutBtn.addEventListener('click', async (e) => { e.preventDefault(); await API.logout(); redirectLogin(); });
 
     try {
       allAtivos = await API.getAtivos();
-      updateStats(allAtivos);
+      allAtivosGlobal = allAtivos.slice();
+      updateStats(allAtivosGlobal);
       renderTable(paginate(allAtivos));
       updatePagination(allAtivos.length);
     } catch (err) {
@@ -212,9 +235,17 @@
         debounce = setTimeout(async () => {
           const termo = searchInput.value.trim();
           try {
-            allAtivos = termo ? await API.searchAtivos(termo) : await API.getAtivos();
+            if (termo) {
+              allAtivos = await API.searchAtivos(termo);
+              updateStats(allAtivosGlobal);
+              updateSearchResultInfo(termo, allAtivos.length);
+            } else {
+              allAtivos = await API.getAtivos();
+              allAtivosGlobal = allAtivos.slice();
+              updateStats(allAtivosGlobal);
+              updateSearchResultInfo('', 0);
+            }
             currentPage = 1;
-            updateStats(allAtivos);
             renderTable(paginate(allAtivos));
             updatePagination(allAtivos.length);
           } catch (_) {}
