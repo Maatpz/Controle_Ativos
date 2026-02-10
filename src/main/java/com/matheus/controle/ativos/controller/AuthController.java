@@ -33,11 +33,6 @@ public class AuthController {
     @Autowired
     private UsuarioService usuarioService;
 
-    @GetMapping("/test")
-    public ResponseEntity<String> test() {
-        return ResponseEntity.ok("Auth Controller OK");
-    }
-
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO credentials,
             HttpServletRequest request) {
