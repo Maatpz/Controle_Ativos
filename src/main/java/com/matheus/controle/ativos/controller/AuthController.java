@@ -11,11 +11,14 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.web.bind.annotation.*;
 
 import com.matheus.controle.ativos.model.Usuario;
+import com.matheus.controle.ativos.model.dto.request.LoginRequestDTO;
+import com.matheus.controle.ativos.model.dto.response.LoginResponseDTO;
 import com.matheus.controle.ativos.service.UsuarioService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,50 +34,39 @@ public class AuthController {
     private UsuarioService usuarioService;
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credentials,
+    public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO credentials,
             HttpServletRequest request) {
-        String username = credentials.get("username");
-        String password = credentials.get("password");
-
-        Map<String, Object> response = new HashMap<>();
-
-        if (username == null || password == null) {
-            response.put("success", false);
-            response.put("message", "Username e senha são obrigatórios");
-            return ResponseEntity.badRequest().body(response);
-        }
+        String username = credentials.getUsername();
+        String password = credentials.getPassword();
 
         if (usuarioService.validateCredentials(username, password)) {
-            Optional<Usuario> usuario = usuarioService.findByUsernameAndAtivo(username, true);
+            Optional<Usuario> usuarioOpt = usuarioService.findByUsernameAndAtivo(username, true);
 
-            if (usuario.isPresent()) {
+            if (usuarioOpt.isPresent()) {
+                Usuario usuario = usuarioOpt.get();
 
                 HttpSession session = request.getSession(true);
                 session.setAttribute("username", username);
-                session.setAttribute("userId", usuario.get().getId());
-                session.setAttribute("role", usuario.get().getRole().name());
+                session.setAttribute("userId", usuario.getId());
+                session.setAttribute("role", usuario.getRole().name());
 
                 Authentication auth = new UsernamePasswordAuthenticationToken(username, null, null);
                 SecurityContextHolder.getContext().setAuthentication(auth);
-                // Persistir na sessão para o próximo request (evita loop login -> / -> login)
+
                 session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                         new SecurityContextImpl(auth));
 
-                response.put("success", true);
-                response.put("message", "Login realizado com sucesso");
-                response.put("user", Map.of(
-                        "id", usuario.get().getId(),
-                        "username", usuario.get().getUsername(),
-                        "nomeCompleto", usuario.get().getNome(),
-                        "role", usuario.get().getRole().name()));
-
-                return ResponseEntity.ok(response);
+                return ResponseEntity.ok(LoginResponseDTO.sucesso(
+                        "Login realizado com sucesso",
+                        usuario.getId(),
+                        usuario.getUsername(),
+                        usuario.getNome(),
+                        usuario.getRole().name()));
             }
         }
 
-        response.put("success", false);
-        response.put("message", "Credenciais inválidas");
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(LoginResponseDTO.falha("Credenciais inválidas"));
     }
 
     @PostMapping("/logout")
