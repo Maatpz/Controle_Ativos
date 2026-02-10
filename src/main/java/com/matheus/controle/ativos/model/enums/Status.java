@@ -4,6 +4,6 @@ public enum Status {
     RESERVADO,
     OPERACIONAL,
     ESTOQUE,
-    // MANUTENCAO,
+    MANUTENCAO,
     // EXTRAVIADO
 }
