@@ -34,6 +34,10 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
             .requestMatchers("/h2-console/**").permitAll()
             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+            // Rotas do "frontend" servido pelo próprio Spring
+            .requestMatchers("/", "/login", "/cadastro", "/editar", "/visualizar").permitAll()
+            // Healthcheck simples
+            .requestMatchers("/status").permitAll()
             .requestMatchers("/html/**", "/index.html", "/login.html", "/cadastro.html", "/editar.html",
                              "/visualizar.html", "/js/**", "/css/**", "/img/**").permitAll()
 
