@@ -121,10 +121,15 @@ public class UsuarioService {
     // Adiantando
     // Pode ser q seja usado
 
+    @org.springframework.beans.factory.annotation.Value("${ADMIN_USERNAME:admin}")
+    private String defaultAdminUsername;
+
+    @org.springframework.beans.factory.annotation.Value("${ADMIN_PASSWORD:admin12345}")
+    private String defaultAdminPassword;
+
     public void initializeDefaultAdmin() {
-        if (!existsByUsername("infrateste")) {
-            createUsuario("infrateste", "admin12345", "Admin", Role.ADMIN);
-            // createUsuario("outro", "admin123", "Admin", Role.SOC);
+        if (!existsByUsername(defaultAdminUsername)) {
+            createUsuario(defaultAdminUsername, defaultAdminPassword, "Admin", Role.ADMIN);
         }
     }
 
