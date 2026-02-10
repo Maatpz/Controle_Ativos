@@ -90,7 +90,8 @@
         btn.innerHTML = btnText;
         submitting = false;
       } catch (err) {
-        alert('Erro ao conectar. Tente novamente.');
+        console.error(err);
+        alert('Erro: ' + (err.message || 'Erro desconhecido ao conectar.'));
         btn.disabled = false;
         btn.innerHTML = btnText;
         submitting = false;

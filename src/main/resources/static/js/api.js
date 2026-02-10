@@ -13,6 +13,15 @@ const API = {
   // --- Auth ---
   async login(username, password) {
     const res = await fetch(`${this.base}/auth/login`, this.opts('POST', { username, password }));
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || 'Erro no login: ' + res.status);
+      } catch (e) {
+        throw new Error('Erro no servidor (' + res.status + '): ' + text.substring(0, 50));
+      }
+    }
     return res.json();
   },
   async logout() {
