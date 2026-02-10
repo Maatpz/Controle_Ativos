@@ -30,6 +30,7 @@ const API = {
   },
   async getAuthStatus() {
     const res = await fetch(`${this.base}/api/auth/status`, { method: 'GET', credentials: 'include' });
+    if (!res.ok) return { authenticated: false };
     return res.json();
   },
 
