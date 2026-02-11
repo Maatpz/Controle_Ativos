@@ -26,14 +26,14 @@ public class AtivoController {
     private AtivoService ativoService;
 
     @PostMapping
-    public ResponseEntity<AtivoResponseDTO> createAtivo(@Valid @RequestBody AtivoRequestDTO ativoRequest) {
+    public ResponseEntity<?> createAtivo(@Valid @RequestBody AtivoRequestDTO ativoRequest) {
         try {
             AtivoResponseDTO novoAtivo = ativoService.criarAtivo(ativoRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body(novoAtivo);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro ao criar ativo: " + e.getMessage());
         }
-
     }
 
     @GetMapping
@@ -50,7 +50,7 @@ public class AtivoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AtivoResponseDTO> updateAtivo(@PathVariable UUID id,
+    public ResponseEntity<?> updateAtivo(@PathVariable UUID id,
             @Valid @RequestBody AtivoRequestDTO ativoRequest) {
         try {
             AtivoResponseDTO ativoAtualizado = ativoService.atualizarAtivo(id, ativoRequest);
@@ -60,7 +60,8 @@ public class AtivoController {
                 return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro ao atualizar ativo: " + e.getMessage());
         }
     }
 

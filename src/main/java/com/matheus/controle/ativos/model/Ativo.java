@@ -7,8 +7,6 @@ import com.matheus.controle.ativos.model.enums.Status;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -24,7 +22,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Ativo {
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -54,7 +51,7 @@ public class Ativo {
 
     // @Column(name = "serial_number")
     // private String serialNumber;
-    
+
     @Column(nullable = false, unique = true)
     private String patrimonio;
 
@@ -102,16 +99,16 @@ public class Ativo {
 
     // @Column(name = "nota_fiscal")
     // private String notaFiscal;
-    
+
     // @Column(name = "resgistro_mudanca")
     // private String registroMudanca;
 
     // @Column(name = "data_ultima_avaliacao")
     // private LocalDate dataUltimaAvaliacao;
-    
+
     // @Column(name = "proxima_avaliacao")
     // private LocalDate proximaAvaliacao;
-    
+
     // private Boolean bitlocker;
 
     // @Column(name = "antivirus_licenca")
