@@ -25,7 +25,7 @@
       const st = await API.getAuthStatus();
       if (st && st.authenticated) return st;
     } catch (_) {
-    
+
     }
     redirectLogin();
     return false;
@@ -40,7 +40,7 @@
         return;
       }
     } catch (_) {
-      
+
     }
     const form = document.querySelector('form');
     if (!form) return;
@@ -83,7 +83,7 @@
               window.location.replace('/');
               return;
             }
-          } catch (_) {}
+          } catch (_) { }
         }
         alert('Sessão não reconhecida. Tente novamente.');
         btn.disabled = false;
@@ -104,11 +104,14 @@
   let allAtivos = [];
   let allAtivosGlobal = [];
   let currentPage = 1;
+  let currentSort = { field: null, order: 'none' };
 
   function statusLabel(s) {
-    const map = { OPERACIONAL: 'Operacional', ESTOQUE: 'Estoque', MANUTENCAO: 'Manutenção', RESERVADO: 'Reservado', 
-    // EXTRAVIADO: 'Extraviado' 
-  };
+    const map = {
+      OPERACIONAL: 'Operacional', ESTOQUE: 'Estoque', MANUTENCAO: 'Manutenção',
+      // RESERVADO: 'Reservado',
+      // EXTRAVIADO: 'Extraviado' 
+    };
     return map[s] || s;
   }
 
@@ -188,6 +191,54 @@
     if (el('stat-manutencao')) el('stat-manutencao').textContent = manutencao;
   }
 
+  function handleSort(field) {
+    if (currentSort.field === field) {
+      currentSort.order = currentSort.order === 'asc' ? 'desc' : 'asc';
+    } else {
+      currentSort.field = field;
+      currentSort.order = 'asc';
+    }
+
+    allAtivos.sort((a, b) => {
+      let valA = a[field] || '';
+      let valB = b[field] || '';
+
+      if (field === 'patrimonio') {
+        // Numeric sort for patrimonio
+        const numA = parseFloat(valA) || 0;
+        const numB = parseFloat(valB) || 0;
+        return currentSort.order === 'asc' ? numA - numB : numB - numA;
+      }
+
+      // String sort (locale sensitive) for others
+      valA = valA.toString().toLowerCase();
+      valB = valB.toString().toLowerCase();
+
+      if (currentSort.order === 'asc') {
+        return valA.localeCompare(valB, 'pt-BR');
+      } else {
+        return valB.localeCompare(valA, 'pt-BR');
+      }
+    });
+
+    // Update UI headers
+    document.querySelectorAll('th.sortable').forEach(th => {
+      const thField = th.dataset.sort;
+      const icon = th.querySelector('i');
+      th.classList.remove('asc', 'desc');
+      if (icon) icon.className = 'fas fa-sort';
+
+      if (thField === field) {
+        th.classList.add(currentSort.order);
+        if (icon) icon.className = `fas fa-sort-${currentSort.order === 'asc' ? 'up' : 'down'}`;
+      }
+    });
+
+    currentPage = 1;
+    renderTable(paginate(allAtivos));
+    updatePagination(allAtivos.length);
+  }
+
   function updateSearchResultInfo(termo, count) {
     const box = document.getElementById('search-result-info');
     const text = document.getElementById('search-result-text');
@@ -230,6 +281,15 @@
     }
   }
 
+  function resetSortUI() {
+    currentSort = { field: null, order: 'none' };
+    document.querySelectorAll('th.sortable').forEach(th => {
+      th.classList.remove('asc', 'desc');
+      const icon = th.querySelector('i');
+      if (icon) icon.className = 'fas fa-sort';
+    });
+  }
+
   async function initIndex() {
     const auth = await requireAuth();
     if (!auth) return;
@@ -257,6 +317,13 @@
       return;
     }
 
+    // Attach sort listeners
+    document.querySelectorAll('th.sortable').forEach(th => {
+      th.addEventListener('click', () => {
+        handleSort(th.dataset.sort);
+      });
+    });
+
     const searchInput = document.getElementById('search');
     if (searchInput) {
       let debounce;
@@ -275,10 +342,11 @@
               updateStats(allAtivosGlobal);
               updateSearchResultInfo('', 0);
             }
+            resetSortUI();
             currentPage = 1;
             renderTable(paginate(allAtivos));
             updatePagination(allAtivos.length);
-          } catch (_) {}
+          } catch (_) { }
         }, 300);
       });
     }

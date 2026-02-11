@@ -80,6 +80,7 @@ h1 {
     font-weight: 800;
     background: var(--primary-gradient);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 0.25rem;
 }
@@ -219,6 +220,7 @@ textarea:focus {
     font-weight: 800;
     background: var(--primary-gradient);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     text-decoration: none;
 }
@@ -254,6 +256,9 @@ textarea:focus {
 }
 
 .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     color: var(--text-secondary);
     text-decoration: none;
     transition: color 0.2s;
@@ -301,6 +306,33 @@ th {
     font-weight: 600;
     font-size: 0.875rem;
     text-transform: uppercase;
+}
+
+th.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.2s;
+}
+
+th.sortable:hover {
+    color: var(--text-primary);
+}
+
+th.sortable i {
+    margin-left: 0.5rem;
+    font-size: 0.8rem;
+    opacity: 0.5;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+th.sortable:hover i,
+th.sortable.asc i,
+th.sortable.desc i {
+    opacity: 1;
+}
+
+th.sortable.asc i {
+    transform: rotate(180deg);
 }
 
 td {
@@ -449,10 +481,24 @@ tr:hover td {
     color: var(--text-primary);
 }
 
-.stat-card-total .stat-value { background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.stat-card-operacional .stat-value { color: #6ee7b7; }
-.stat-card-estoque .stat-value { color: #fdba74; }
-.stat-card-manutencao .stat-value { color: #fca5a5; }
+.stat-card-total .stat-value {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.stat-card-operacional .stat-value {
+    color: #6ee7b7;
+}
+
+.stat-card-estoque .stat-value {
+    color: #fdba74;
+}
+
+.stat-card-manutencao .stat-value {
+    color: #fca5a5;
+}
 
 .stat-label {
     color: var(--text-secondary);
@@ -616,7 +662,8 @@ select,
 textarea,
 .search-input {
     min-height: 44px;
-    font-size: 16px; /* Evita zoom no iOS/Android ao focar */
+    font-size: 16px;
+    /* Evita zoom no iOS/Android ao focar */
 }
 
 /* Table actions column: evita botões espremidos no mobile */
@@ -672,7 +719,7 @@ textarea,
     margin-bottom: 0.75rem;
 }
 
-.mobile-card-body > div {
+.mobile-card-body>div {
     margin-bottom: 0.25rem;
 }
 
