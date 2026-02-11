@@ -52,7 +52,3 @@ Para rodar o projeto em seu ambiente:
    mvn spring-boot:run
    ```
 5. Acesse `http://localhost:8080`.
-
-
-
-Desenvolvido por [Matheus](https://github.com/Maatpz).
