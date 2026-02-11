@@ -114,11 +114,15 @@
 
   const emptyStateHtml = '<tr><td colspan="6" class="empty-state-cell"><div class="empty-state"><i class="fas fa-inbox empty-state-icon"></i><p class="empty-state-text">Nenhum ativo encontrado.</p></div></td></tr>';
 
+  const emptyStateMobileHtml = '<div class="mobile-cards-empty"><i class="fas fa-inbox"></i><p>Nenhum ativo encontrado.</p></div>';
+
   function renderTable(ativos) {
     const tbody = document.querySelector('.table-container tbody');
+    const mobileCards = document.getElementById('mobile-cards');
     if (!tbody) return;
     if (!ativos.length) {
       tbody.innerHTML = emptyStateHtml;
+      if (mobileCards) mobileCards.innerHTML = emptyStateMobileHtml;
       return;
     }
     tbody.innerHTML = ativos.map(a => `
@@ -139,6 +143,30 @@
     tbody.querySelectorAll('.btn-delete').forEach(btn => {
       btn.addEventListener('click', () => deleteAtivo(btn.dataset.id));
     });
+
+    if (mobileCards) {
+      mobileCards.innerHTML = ativos.map(a => `
+        <div class="mobile-card">
+          <div class="mobile-card-header">
+            <strong>${escapeHtml(a.nomeAtivo || '-')}</strong>
+            <span class="badge">${statusLabel(a.status)}</span>
+          </div>
+          <div class="mobile-card-body">
+            <div>Patrimônio: ${escapeHtml(a.patrimonio || '-')}</div>
+            <div>Localidade: ${escapeHtml(a.localidade || '-')}</div>
+            <div>Responsável: ${escapeHtml(a.responsavel || '-')}</div>
+          </div>
+          <div class="mobile-card-actions">
+            <a href="/visualizar?id=${a.id}" class="btn btn-sm btn-secondary"><i class="fas fa-eye"></i></a>
+            <a href="/editar?id=${a.id}" class="btn btn-sm btn-secondary"><i class="fas fa-edit"></i></a>
+            <button type="button" class="btn btn-sm btn-danger btn-delete" data-id="${a.id}"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      `).join('');
+      mobileCards.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', () => deleteAtivo(btn.dataset.id));
+      });
+    }
   }
 
   function escapeHtml(t) {
