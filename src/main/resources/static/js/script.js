@@ -106,7 +106,9 @@
   let currentPage = 1;
 
   function statusLabel(s) {
-    const map = { OPERACIONAL: 'Operacional', ESTOQUE: 'Estoque', MANUTENCAO: 'Manutenção', RESERVADO: 'Reservado', EXTRAVIADO: 'Extraviado' };
+    const map = { OPERACIONAL: 'Operacional', ESTOQUE: 'Estoque', MANUTENCAO: 'Manutenção', RESERVADO: 'Reservado', 
+    // EXTRAVIADO: 'Extraviado' 
+  };
     return map[s] || s;
   }
 
