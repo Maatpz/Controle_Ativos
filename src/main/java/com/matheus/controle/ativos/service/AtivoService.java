@@ -35,7 +35,7 @@ public class AtivoService {
     public Ativo toEntity(AtivoRequestDTO dto) {
         Ativo ativo = new Ativo();
         ativo.setNomeAtivo(dto.getNomeAtivo());
-        ativo.setStatus(dto.getStatus());
+        ativo.setStatus(dto.getStatus() != null ? dto.getStatus() : Status.OPERACIONAL);
         ativo.setLocalidade(dto.getLocalidade());
         ativo.setSetor(dto.getSetor());
         ativo.setResponsavel(dto.getResponsavel());
