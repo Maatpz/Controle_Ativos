@@ -7,6 +7,8 @@ import com.matheus.controle.ativos.model.enums.Status;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -33,7 +35,7 @@ public class Ativo {
     private String nomeAtivo;
 
     // private String dominio;
-
+    @Enumerated(EnumType.STRING)
     private Status status;
 
     private String localidade;
@@ -159,3 +161,12 @@ public class Ativo {
     // private String obs;
 
 }
+
+
+// {
+//   "ADMIN_PASSWORD": "infra!@#357",
+//   "ADMIN_USERNAME": "infra",
+//   "DATABASE_PASSWORD": "npg_ZU5Bd6rsKvnS",
+//   "DATABASE_URL": "jdbc:postgresql://ep-divine-fog-acm0f74m-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+//   "DATABASE_USERNAME": "neondb_owner"
+// }
