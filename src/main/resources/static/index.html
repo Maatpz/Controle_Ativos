@@ -70,7 +70,8 @@
 
             <div class="search-wrap">
                 <i class="fas fa-search search-icon"></i>
-                <input type="text" id="search" class="search-input" placeholder="Buscar por nome, patrimônio, responsável, setor ou localidade...">
+                <input type="text" id="search" class="search-input"
+                    placeholder="Buscar por nome, patrimônio, responsável, setor ou localidade...">
             </div>
 
             <div id="search-result-info" class="search-result-info" style="display: none;">
@@ -84,11 +85,11 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Nome</th>
-                            <th>Patrimônio</th>
+                            <th class="sortable" data-sort="nomeAtivo">Nome <i class="fas fa-sort"></i></th>
+                            <th class="sortable" data-sort="patrimonio">Patrimônio <i class="fas fa-sort"></i></th>
                             <th>Status</th>
                             <th>Localidade</th>
-                            <th>Responsável</th>
+                            <th class="sortable" data-sort="responsavel">Responsável <i class="fas fa-sort"></i></th>
                             <th>Ações</th>
                         </tr>
                     </thead>
