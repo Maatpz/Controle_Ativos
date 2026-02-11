@@ -1,10 +1,9 @@
 package com.matheus.controle.ativos.model.enums;
 
 public enum Status {
+    RESERVADO,
     OPERACIONAL,
     ESTOQUE,
     MANUTENCAO,
-    
-    //RESERVADO,
     // EXTRAVIADO
 }
