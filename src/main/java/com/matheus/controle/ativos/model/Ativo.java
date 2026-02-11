@@ -35,7 +35,7 @@ public class Ativo {
     private String nomeAtivo;
 
     // private String dominio;
-    @Enumerated(EnumType.STRING)
+
     private Status status;
 
     private String localidade;
