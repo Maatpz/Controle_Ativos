@@ -7,8 +7,6 @@ import com.matheus.controle.ativos.model.enums.Status;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,8 +34,6 @@ public class Ativo {
 
     // private String dominio;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
     private Status status;
 
     private String localidade;
