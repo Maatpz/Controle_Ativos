@@ -155,7 +155,7 @@
           </div>
           <div class="mobile-card-body">
             <div>Patrimônio: ${escapeHtml(a.patrimonio || '-')}</div>
-            <div>Localidade: ${escapeHtml(a.localidade || '-')}</div>
+            <div>Observações: ${escapeHtml(a.localidade || '-')}</div>
             <div>Responsável: ${escapeHtml(a.responsavel || '-')}</div>
           </div>
           <div class="mobile-card-actions">
