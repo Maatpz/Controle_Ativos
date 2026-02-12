@@ -27,17 +27,17 @@ public class SecurityConfig {
        @Bean
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-       
+        .csrf(csrf -> csrf.disable())
         .cors(cors -> { })
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-        //     .requestMatchers("/h2-console/**").permitAll()
-        //     .requestMatchers("/", "/login", "/cadastro", "/editar", "/visualizar").permitAll()
-        //     .requestMatchers("/html/**", "/index.html", "/login.html", "/cadastro.html", "/editar.html",
-        //                      "/visualizar.html", "/js/**", "/css/**", "/img/**").permitAll()
+            .requestMatchers("/h2-console/**").permitAll()
+            .requestMatchers("/", "/login", "/cadastro", "/editar", "/visualizar").permitAll()
+            .requestMatchers("/html/**", "/index.html", "/login.html", "/cadastro.html", "/editar.html",
+                             "/visualizar.html", "/js/**", "/css/**", "/img/**").permitAll()
 
             
-        //     .requestMatchers("/api/auth/**").permitAll()
+            .requestMatchers("/api/auth/**").permitAll()
 
             .anyRequest().authenticated()
         )
