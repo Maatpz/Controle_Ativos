@@ -66,4 +66,19 @@ const API = {
     if (!res.ok) throw new Error('Erro na busca');
     return res.json();
   },
+
+  // --- Export(txt) ---
+  async exportTxt(termo) {
+    const q = termo ? `?termo=${encodeURIComponent(termo)}` : '';
+    const res = await fetch(`${this.base}/ativos/export/txt${q}`, { method: 'GET', credentials: 'include' });
+    if (!res.ok) throw new Error(res.status === 401 ? 'Não autorizado' : 'Erro ao exportar');
+    const text = await res.text();
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ativos-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
 };

@@ -328,6 +328,23 @@
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) logoutBtn.addEventListener('click', async (e) => { e.preventDefault(); await API.logout(); redirectLogin(); });
 
+    const btnExportTxt = document.getElementById('btn-export-txt');
+    if (btnExportTxt) {
+      btnExportTxt.addEventListener('click', async () => {
+        const termo = (document.getElementById('search') && document.getElementById('search').value.trim()) || '';
+        try {
+          btnExportTxt.disabled = true;
+          btnExportTxt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exportando...';
+          await API.exportTxt(termo || undefined);
+        } catch (err) {
+          alert(err.message || 'Erro ao exportar.');
+        } finally {
+          btnExportTxt.disabled = false;
+          btnExportTxt.innerHTML = '<i class="fas fa-file-alt"></i> Exportar TXT';
+        }
+      });
+    }
+
     try {
       allAtivos = await API.getAtivos();
       allAtivosGlobal = allAtivos.slice();

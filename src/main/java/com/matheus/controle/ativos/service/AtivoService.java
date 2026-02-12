@@ -111,6 +111,34 @@ public class AtivoService {
         return toResponseDTOList(findByTermoGeral(termo));
     }
 
+    public String exportarTxt(List<AtivoResponseDTO> ativos) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("CONTROLE DE ATIVOS").append(System.lineSeparator());
+        sb.append("Total: ").append(ativos.size()).append(" ativo(s)").append(System.lineSeparator());
+        sb.append(System.lineSeparator());
+        sb.append("Nome | Patrimônio | Status | Responsável").append(System.lineSeparator());
+
+        for (AtivoResponseDTO a : ativos) {
+            String nome = a.getNomeAtivo() != null ? a.getNomeAtivo() : "-";
+            String patrimonio = a.getPatrimonio() != null ? a.getPatrimonio() : "-";
+            String status = statusParaTxt(a.getStatus());
+            String responsavel = a.getResponsavel() != null ? a.getResponsavel() : "-";
+            sb.append(nome).append(" | ").append(patrimonio).append(" | ").append(status).append(" | ").append(responsavel)
+                    .append(System.lineSeparator());
+        }
+        return sb.toString();
+    }
+
+    private static String statusParaTxt(Status status) {
+        if (status == null) return "-";
+        switch (status) {
+            case OPERACIONAL: return "Operacional";
+            case ESTOQUE: return "Estoque";
+            case MANUTENCAO: return "Manutenção";
+            default: return status.name();
+        }
+    }
+
     public List<AtivoResponseDTO> findByMultipleFieldsDTO(String nome, String responsavel,
             String patrimonio, String setor, Status status) {
         return toResponseDTOList(findByMultipleFields(nome, responsavel, patrimonio, setor, status));

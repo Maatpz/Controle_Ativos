@@ -10,9 +10,13 @@ import com.matheus.controle.ativos.service.AtivoService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import jakarta.validation.Valid;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -84,6 +88,19 @@ public class AtivoController {
     public ResponseEntity<List<AtivoResponseDTO>> searchAtivos(@RequestParam(required = false) String termo) {
         List<AtivoResponseDTO> ativos = ativoService.findByTermoGeralDTO(termo);
         return ResponseEntity.ok(ativos);
+    }
+
+    @GetMapping(value = "/export/txt", produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> exportarTxt(@RequestParam(required = false) String termo) {
+        List<AtivoResponseDTO> ativos = (termo != null && !termo.isBlank())
+                ? ativoService.findByTermoGeralDTO(termo.trim())
+                : ativoService.findAllDTO();
+        String conteudo = ativoService.exportarTxt(ativos);
+        String filename = "ativos-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + ".txt";
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.parseMediaType("text/plain;charset=UTF-8"))
+                .body(conteudo);
     }
 
     @GetMapping("/search/nome")

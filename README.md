@@ -51,8 +51,3 @@ Para rodar o projeto em seu ambiente:
    ```bash
    mvn spring-boot:run
    ```
-<<<<<<< Updated upstream
-5. Acesse `http://localhost:8080`.
-=======
-5. Acesse `http://localhost:8080`.
->>>>>>> Stashed changes

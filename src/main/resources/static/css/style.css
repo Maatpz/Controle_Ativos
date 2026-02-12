@@ -106,6 +106,13 @@ h1 {
     line-height: 1.5;
 }
 
+.page-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
 h2 {
     font-size: 1.8rem;
 }
@@ -769,7 +776,12 @@ textarea,
         margin-bottom: 1.5rem;
     }
 
-    .page-header .btn-primary {
+    .page-header-actions {
+        flex-direction: column;
+    }
+
+    .page-header-actions .btn,
+    .page-header-actions .btn-primary {
         width: 100%;
         justify-content: center;
     }
