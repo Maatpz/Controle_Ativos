@@ -208,6 +208,11 @@
         return currentSort.order === 'asc' ? numA - numB : numB - numA;
       }
 
+      if (field === 'status') {
+        valA = statusLabel(valA);
+        valB = statusLabel(valB);
+      }
+
       valA = valA.toString().toLowerCase();
       valB = valB.toString().toLowerCase();
 
