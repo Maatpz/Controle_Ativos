@@ -190,6 +190,34 @@
     if (el('stat-manutencao')) el('stat-manutencao').textContent = manutencao;
   }
 
+  /**
+   * Ordenação natural: A-Z e 0-9 como números (ex: PA-25 antes de PA-50, Pa-9 antes de Pa-10).
+   * Retorna <0 se a < b, >0 se a > b, 0 se iguais.
+   */
+  function naturalCompare(a, b) {
+    const strA = (a == null ? '' : a).toString().trim();
+    const strB = (b == null ? '' : b).toString().trim();
+    const chunksA = strA.match(/(\d+|\D+)/g) || [strA];
+    const chunksB = strB.match(/(\d+|\D+)/g) || [strB];
+    const len = Math.max(chunksA.length, chunksB.length);
+    for (let i = 0; i < len; i++) {
+      const partA = chunksA[i] || '';
+      const partB = chunksB[i] || '';
+      const numA = parseInt(partA, 10);
+      const numB = parseInt(partB, 10);
+      const aIsNum = !Number.isNaN(numA) && partA === String(numA);
+      const bIsNum = !Number.isNaN(numB) && partB === String(numB);
+      let cmp;
+      if (aIsNum && bIsNum) {
+        cmp = numA - numB;
+      } else {
+        cmp = partA.toLowerCase().localeCompare(partB.toLowerCase(), 'pt-BR');
+      }
+      if (cmp !== 0) return cmp;
+    }
+    return 0;
+  }
+
   function handleSort(field) {
     if (currentSort.field === field) {
       currentSort.order = currentSort.order === 'asc' ? 'desc' : 'asc';
@@ -199,28 +227,17 @@
     }
 
     allAtivos.sort((a, b) => {
-      let valA = a[field] || '';
-      let valB = b[field] || '';
-
-      if (field === 'patrimonio') {
-        const numA = parseFloat(valA) || 0;
-        const numB = parseFloat(valB) || 0;
-        return currentSort.order === 'asc' ? numA - numB : numB - numA;
-      }
+      let valA = a[field] ?? '';
+      let valB = b[field] ?? '';
 
       if (field === 'status') {
         valA = statusLabel(valA);
         valB = statusLabel(valB);
       }
 
-      valA = valA.toString().toLowerCase();
-      valB = valB.toString().toLowerCase();
-
-      if (currentSort.order === 'asc') {
-        return valA.localeCompare(valB, 'pt-BR');
-      } else {
-        return valB.localeCompare(valA, 'pt-BR');
-      }
+      let cmp = naturalCompare(valA, valB);
+      if (currentSort.order === 'desc') cmp = -cmp;
+      return cmp;
     });
 
     document.querySelectorAll('th.sortable').forEach(th => {
