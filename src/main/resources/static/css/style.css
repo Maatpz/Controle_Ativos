@@ -312,6 +312,7 @@ th.sortable {
     cursor: pointer;
     user-select: none;
     transition: color 0.2s;
+    white-space: nowrap;
 }
 
 th.sortable:hover {
@@ -323,16 +324,13 @@ th.sortable i {
     font-size: 0.8rem;
     opacity: 0.5;
     transition: opacity 0.2s, transform 0.2s;
+    display: inline-block;
 }
 
 th.sortable:hover i,
 th.sortable.asc i,
 th.sortable.desc i {
     opacity: 1;
-}
-
-th.sortable.asc i {
-    transform: rotate(180deg);
 }
 
 td {

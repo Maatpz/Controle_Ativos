@@ -232,8 +232,15 @@
       }
 
       let cmp = naturalCompare(valA, valB);
-      if (currentSort.order === 'desc') cmp = -cmp;
-      return cmp;
+
+      // Ordenação secundária para evitar "bug" de visualização instável
+      if (cmp === 0) {
+        const cmpNome = naturalCompare(a.nomeAtivo, b.nomeAtivo);
+        if (cmpNome !== 0) return cmpNome;
+        return naturalCompare(a.patrimonio, b.patrimonio);
+      }
+
+      return currentSort.order === 'desc' ? -cmp : cmp;
     });
 
     document.querySelectorAll('th.sortable').forEach(th => {
@@ -244,7 +251,9 @@
 
       if (thField === field) {
         th.classList.add(currentSort.order);
-        if (icon) icon.className = `fas fa-sort-${currentSort.order === 'asc' ? 'up' : 'down'}`;
+        if (icon) {
+          icon.className = currentSort.order === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+        }
       }
     });
 
