@@ -190,10 +190,6 @@
     if (el('stat-manutencao')) el('stat-manutencao').textContent = manutencao;
   }
 
-  /**
-   * Ordenação natural: A-Z e 0-9 como números (ex: PA-25 antes de PA-50, Pa-9 antes de Pa-10).
-   * Retorna <0 se a < b, >0 se a > b, 0 se iguais.
-   */
   function naturalCompare(a, b) {
     const strA = (a == null ? '' : a).toString().trim();
     const strB = (b == null ? '' : b).toString().trim();
