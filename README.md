@@ -4,9 +4,9 @@ Este projeto surgiu inicialmente como uma iniciativa de estudos em tecnologias *
 
 O sistema permite o controle, mapeamento e manutenção de ativos (como equipamentos de TI)
 
-## 🚀 Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
-O projeto utiliza uma stack moderna e robusta para garantir performance e escalabilidade:
+O projeto utiliza as seguintes stacks:
 
 - **Backend:** Java 21 com Spring Boot 3
 - **Segurança:** Spring Security (Controle de acesso)
@@ -14,12 +14,12 @@ O projeto utiliza uma stack moderna e robusta para garantir performance e escala
 - **Persistência:** Spring Data JPA / Hibernate
 - **Deployment:** **[Railway](https://railway.app/)**
 - **Interface:** HTML, CSS e JavaScript
-- **Integração:** Apache POI (Para leitura e importação de arquivos Excel `.xlsx`)(em andamento)
+- **Integração:** Apache POI (Para leitura e importação de arquivos Excel `.xlsx`) (em andamento)  (export em txt atualmente)
 - **Documentação API:** Estudos noSwagger / OpenAPI
 
 
 
-## 📸 Demonstração
+## Demonstração
 
 Abaixo estão algumas capturas de tela do sistema no front inicial, ja alterado no momento atual:
 
@@ -33,14 +33,14 @@ Abaixo estão algumas capturas de tela do sistema no front inicial, ja alterado 
 ![Gerenciamento](./3.PNG)
 
 
-## ⚙️ Principais Funcionalidades
+## Principais Funcionalidades
 
-- **Gestão de Ativos:** Cadastro, edição e exclusão de itens de patrimônio.
+- **Gestão de Ativos:** Cadastro, edição e exclusão de itens.
 - **Segurança:** Autenticação e autorização para proteger os dados.
 - **Interface Responsiva:** Visual limpo e intuitivo para facilitar o uso cotidiano.
 
 
-## 🛠️ Como Executar (Localmente)
+## Como Executar (Localmente)
 
 Para rodar o projeto em seu ambiente:
 
