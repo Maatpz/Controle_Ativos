@@ -26,8 +26,8 @@ Abaixo estão algumas capturas de tela do sistema no front inicial, ja alterado 
 ### Dashboard / Lista de Ativos
 ![Dashboard](./1.PNG)
 
-### Detalhes do Ativo
-![Detalhes](./2.PNG)
+### Cadastro do Ativo
+![Cadastro](./2.PNG)
 
 ### Login
 ![Login](./3.PNG)
