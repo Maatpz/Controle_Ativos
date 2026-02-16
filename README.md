@@ -29,8 +29,8 @@ Abaixo estão algumas capturas de tela do sistema no front inicial, ja alterado 
 ### Detalhes do Ativo
 ![Detalhes](./2.PNG)
 
-### Gerenciamento
-![Gerenciamento](./3.PNG)
+### Login
+![Login](./3.PNG)
 
 
 ## Principais Funcionalidades
