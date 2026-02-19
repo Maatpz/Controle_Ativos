@@ -36,11 +36,11 @@
 		</dependency>
 
 		<!-- h2 teste -->
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 			<scope>runtime</scope>
-		</dependency>
+		</dependency> -->
 
 		<!-- postgresql -->
 		<dependency>
@@ -50,11 +50,11 @@
 		</dependency>
 
 		<!-- mysql -->
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
 			<scope>runtime</scope>
-		</dependency>
+		</dependency> -->
 		
 
 		<dependency>
