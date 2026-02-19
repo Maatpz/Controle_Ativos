@@ -121,10 +121,10 @@ public class UsuarioService {
     // Adiantando
     // Pode ser q seja usado
 
-    @org.springframework.beans.factory.annotation.Value("${ADMIN_USERNAME:admin}")
+    @org.springframework.beans.factory.annotation.Value("${ADMIN_USERNAME}")
     private String defaultAdminUsername;
 
-    @org.springframework.beans.factory.annotation.Value("${ADMIN_PASSWORD:admin12345}")
+    @org.springframework.beans.factory.annotation.Value("${ADMIN_PASSWORD:}")
     private String defaultAdminPassword;
 
     public void initializeDefaultAdmin() {
@@ -140,7 +140,7 @@ public class UsuarioService {
                 System.out.println("Usuário " + defaultAdminUsername + " ativado.");
             }
 
-            // Se a senha configurada via env var for diferente da do banco, atualiza
+            // Se a senha configurad for diferente da do banco, atualiza
             if (!passwordEncoder.matches(defaultAdminPassword, usuario.getPassword())) {
                 usuario.setPassword(passwordEncoder.encode(defaultAdminPassword));
                 changed = true;
