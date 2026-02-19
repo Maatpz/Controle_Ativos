@@ -150,9 +150,6 @@ public class UsuarioService {
             if (changed) {
                 usuarioRepository.save(usuario);
             }
-        } else {
-            createUsuario(defaultAdminUsername, defaultAdminPassword, "Admin", Role.ADMIN);
-            System.out.println("Usuário " + defaultAdminUsername + " criado com sucesso.");
         }
     }
 
