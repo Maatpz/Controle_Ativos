@@ -79,7 +79,6 @@ export function AtivosPage() {
         <div>
           <span className="eyebrow">Ativos</span>
           <h2>Ativos</h2>
-          <p>Busca unica por nome, responsavel ou patrimonio. Todas as regras sao validadas no backend.</p>
         </div>
         <div className="header-actions">
           <button className="secondary-button" type="button" onClick={() => void API.exportTxt({ termo })}>

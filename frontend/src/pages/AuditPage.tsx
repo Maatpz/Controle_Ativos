@@ -79,8 +79,9 @@ export function AuditPage() {
     <div className="page-stack">
       <section className="audit-filter-panel">
         <div className="audit-title-block">
+          <span className="eyebrow">Auditoria e rastreabilidade</span>
           <h2>Auditoria e rastreabilidade</h2>
-          <p>Log de quem fez, quando fez e o que foi alterado. Visivel apenas para administradores.</p>
+        
         </div>
         <div className="audit-filter-row">
           <input

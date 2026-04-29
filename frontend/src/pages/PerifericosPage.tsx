@@ -92,7 +92,7 @@ export function PerifericosPage() {
         <div>
           <span className="eyebrow">Perifericos</span>
           <h2>Perifericos</h2>
-          <p>Mouse e teclado, adaptadores, fones e outros ficam registrados apenas por quantidade.</p>
+          
         </div>
         <div className="header-actions">
           <button

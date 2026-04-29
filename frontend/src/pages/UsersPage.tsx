@@ -116,7 +116,7 @@ export function UsersPage() {
         <div>
           <span className="eyebrow">Usuarios</span>
           <h2>Usuarios</h2>
-          <p>Somente perfil ADMIN consegue cadastrar, alterar e excluir usuarios.</p>
+          
         </div>
         <div className="header-actions">
           <button
