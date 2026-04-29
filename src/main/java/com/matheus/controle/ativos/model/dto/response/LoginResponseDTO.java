@@ -16,7 +16,7 @@ public class LoginResponseDTO {
     private UsuarioResponseDTO user;
 
     public static LoginResponseDTO sucesso(String message, UUID id, String username, String nome, String role) {
-        return new LoginResponseDTO(true, message, new UsuarioResponseDTO(id, username, nome, role));
+        return new LoginResponseDTO(true, message, new UsuarioResponseDTO(id, username, nome, role, true, null));
     }
 
     public static LoginResponseDTO falha(String message) {
