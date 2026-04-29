@@ -1,156 +1,226 @@
 package com.matheus.controle.ativos.service;
 
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.matheus.controle.ativos.exception.BusinessException;
+import com.matheus.controle.ativos.exception.ResourceNotFoundException;
 import com.matheus.controle.ativos.model.Usuario;
+import com.matheus.controle.ativos.model.dto.request.UsuarioCreateRequestDTO;
+import com.matheus.controle.ativos.model.dto.request.UsuarioUpdateRequestDTO;
+import com.matheus.controle.ativos.model.dto.response.PageResponseDTO;
+import com.matheus.controle.ativos.model.dto.response.UsuarioResponseDTO;
 import com.matheus.controle.ativos.model.enums.Role;
 import com.matheus.controle.ativos.repository.UsuarioRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class UsuarioService {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuditoriaService auditoriaService;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    @Value("${ADMIN_USERNAME:}")
+    private String defaultAdminUsername;
 
-    public Optional<Usuario> findById(UUID id) {
-        if (id == null) {
-            throw new RuntimeException("Id não pode ser nulo");
+    @Value("${ADMIN_PASSWORD:}")
+    private String defaultAdminPassword;
+
+    public PageResponseDTO<UsuarioResponseDTO> listar(int page, int size, String sort) {
+        return PageResponseDTO.from(usuarioRepository.findAll(PageRequest.of(page, size, parseSort(sort)))
+                .map(this::toResponseDTO));
+    }
+
+    public UsuarioResponseDTO buscarPorId(UUID id) {
+        return toResponseDTO(getEntity(id));
+    }
+
+    public Optional<Usuario> findByUsernameIgnoreCaseAndAtivo(String username, Boolean ativo) {
+        return usuarioRepository.findByUsernameIgnoreCaseAndAtivo(username, ativo);
+    }
+
+    @Transactional
+    public UsuarioResponseDTO criar(UsuarioCreateRequestDTO request) {
+        String username = normalizeUsername(request.getUsername());
+        if (usuarioRepository.existsByUsernameIgnoreCase(username)) {
+            throw new BusinessException("Ja existe um usuario com esse username");
         }
-        return usuarioRepository.findById(id);
+
+        Usuario usuario = new Usuario();
+        usuario.setUsername(username);
+        usuario.setNome(normalizeNome(request.getNome()));
+        usuario.setPassword(passwordEncoder.encode(request.getPassword().trim()));
+        usuario.setRole(request.getRole());
+        usuario.setAtivo(Boolean.TRUE.equals(request.getAtivo()));
+
+        Usuario salvo = usuarioRepository.save(usuario);
+        auditoriaService.registrar(
+                "USUARIO",
+                salvo.getId().toString(),
+                "CRIACAO",
+                "Usuario cadastrado: " + salvo.getUsername() + " com perfil " + salvo.getRole().name());
+        return toResponseDTO(salvo);
     }
 
-    public List<Usuario> findAll() {
-        return usuarioRepository.findAll();
-    }
-
-    public Optional<Usuario> findByUsername(String username) {
-        return usuarioRepository.findByUsername(username);
-    }
-
-    public Optional<Usuario> findByUsernameAndAtivo(String username, Boolean ativo) {
-        return usuarioRepository.findByUsernameAndAtivo(username, ativo);
-    }
-
-    public boolean existsByUsername(String username) {
-        return usuarioRepository.existsByUsername(username);
-    }
-
-    public Usuario save(Usuario usuario) {
-
-        if (usuario.getPassword() != null && !usuario.getPassword().isEmpty()) {
-            usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+    @Transactional
+    public UsuarioResponseDTO atualizar(UUID id, UsuarioUpdateRequestDTO request) {
+        Usuario usuario = getEntity(id);
+        String username = normalizeUsername(request.getUsername());
+        Optional<Usuario> usuarioComMesmoUsername = usuarioRepository.findByUsernameIgnoreCase(username);
+        if (usuarioComMesmoUsername.isPresent() && !usuarioComMesmoUsername.get().getId().equals(id)) {
+            throw new BusinessException("Ja existe um usuario com esse username");
         }
-        return usuarioRepository.save(usuario);
+
+        Role roleAnterior = usuario.getRole();
+        Boolean ativoAnterior = usuario.getAtivo();
+
+        usuario.setUsername(username);
+        usuario.setNome(normalizeNome(request.getNome()));
+        usuario.setRole(request.getRole());
+        usuario.setAtivo(Boolean.TRUE.equals(request.getAtivo()));
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            usuario.setPassword(passwordEncoder.encode(request.getPassword().trim()));
+        }
+
+        validateAtLeastOneAdmin(roleAnterior, ativoAnterior, usuario.getRole(), usuario.getAtivo(), usuario.getId());
+
+        Usuario salvo = usuarioRepository.save(usuario);
+        auditoriaService.registrar(
+                "USUARIO",
+                salvo.getId().toString(),
+                "ATUALIZACAO",
+                "Usuario atualizado: " + salvo.getUsername() + " com perfil " + salvo.getRole().name() + " e ativo="
+                        + salvo.getAtivo());
+        return toResponseDTO(salvo);
     }
 
-    public Usuario createUsuario(String username, String password, String nome, Role role) {
-        if (existsByUsername(username)) {
-            throw new RuntimeException("Ja existe um usuario com esse username " + username);
+    @Transactional
+    public void deletar(UUID id) {
+        Usuario usuario = getEntity(id);
+        if (usuario.getRole() == Role.ADMIN && countActiveAdminsExcluding(id) == 0) {
+            throw new BusinessException("Nao e permitido excluir o ultimo administrador ativo");
         }
-        Usuario usuario = new Usuario(username, password, nome, role);
-        return save(usuario);
 
-    }
-
-    public Usuario updateUsuario(UUID id, Usuario usuarioAtualizado) {
-
-        Optional<Usuario> usuarioExistente = findById(id);
-        if (usuarioExistente.isPresent()) {
-
-            Usuario usuario = usuarioExistente.get();
-
-            if (usuarioAtualizado.getUsername() != null
-                    && !usuarioAtualizado.getUsername().equals(usuario.getUsername())) {
-                if (existsByUsername(usuarioAtualizado.getUsername())) {
-                    throw new RuntimeException("Username já existe: " + usuarioAtualizado.getUsername());
-                }
-                usuario.setUsername(usuarioAtualizado.getUsername());
-
-            }
-
-            if (usuarioAtualizado.getNome() != null) {
-                usuario.setNome(usuarioAtualizado.getNome());
-            }
-
-            if (usuarioAtualizado.getPassword() != null && !usuarioAtualizado.getPassword().isEmpty()) {
-                usuario.setPassword(passwordEncoder.encode(usuarioAtualizado.getPassword()));
-            }
-
-            if (usuarioAtualizado.getRole() != null) {
-                usuario.setRole(usuarioAtualizado.getRole());
-            }
-
-            if (usuarioAtualizado.getAtivo() != null) {
-                usuario.setAtivo(usuarioAtualizado.getAtivo());
-            }
-            return usuarioRepository.save(usuario);
-        }
-        return null;
-    }
-
-    public void deleteById(UUID id) {
-        if (id == null) {
-            throw new RuntimeException("Id não pode ser nulo");
-        }
-        usuarioRepository.deleteById(id);
-    }
-
-    public boolean existsById(UUID id) {
-        if (id == null) {
-            throw new RuntimeException("Id não pode ser nulo");
-        }
-        return usuarioRepository.existsById(id);
+        usuarioRepository.delete(usuario);
+        auditoriaService.registrar(
+                "USUARIO",
+                id.toString(),
+                "EXCLUSAO",
+                "Usuario removido: " + usuario.getUsername());
     }
 
     public boolean validateCredentials(String username, String password) {
-        Optional<Usuario> usuario = findByUsernameAndAtivo(username, true);
-        if (usuario.isPresent()) {
-            return passwordEncoder.matches(password, usuario.get().getPassword());
-        }
-        return false;
+        Optional<Usuario> usuario = findByUsernameIgnoreCaseAndAtivo(username, true);
+        return usuario.filter(value -> passwordEncoder.matches(password, value.getPassword())).isPresent();
     }
-    // Adiantando
-    // Pode ser q seja usado
 
-    @org.springframework.beans.factory.annotation.Value("${ADMIN_USERNAME}")
-    private String defaultAdminUsername;
-
-    @org.springframework.beans.factory.annotation.Value("${ADMIN_PASSWORD:}")
-    private String defaultAdminPassword;
+    public Map<String, Object> resumoUsuarios() {
+        Map<String, Object> resumo = new LinkedHashMap<>();
+        resumo.put("totalUsuarios", usuarioRepository.count());
+        resumo.put("admins", usuarioRepository.countByRole(Role.ADMIN));
+        resumo.put("users", usuarioRepository.countByRole(Role.USER));
+        return resumo;
+    }
 
     public void initializeDefaultAdmin() {
-        Optional<Usuario> usuarioExistente = findByUsername(defaultAdminUsername);
+        if (defaultAdminUsername == null || defaultAdminUsername.isBlank()) {
+            return;
+        }
+
+        Optional<Usuario> usuarioExistente = usuarioRepository.findByUsernameIgnoreCase(defaultAdminUsername.trim());
         if (usuarioExistente.isPresent()) {
             Usuario usuario = usuarioExistente.get();
-            boolean changed = false;
-
-            // Garante que o usuário é ativo
-            if (usuario.getAtivo() == null || !usuario.getAtivo()) {
-                usuario.setAtivo(true);
-                changed = true;
-                System.out.println("Usuário " + defaultAdminUsername + " ativado.");
-            }
-
-            // Se a senha configurad for diferente da do banco, atualiza
-            if (!passwordEncoder.matches(defaultAdminPassword, usuario.getPassword())) {
+            usuario.setAtivo(true);
+            usuario.setRole(Role.ADMIN);
+            if (defaultAdminPassword != null && !defaultAdminPassword.isBlank()
+                    && !passwordEncoder.matches(defaultAdminPassword, usuario.getPassword())) {
                 usuario.setPassword(passwordEncoder.encode(defaultAdminPassword));
-                changed = true;
-                System.out.println("Senha do usuário " + defaultAdminUsername + " atualizada conforme configuração.");
             }
+            usuarioRepository.save(usuario);
+            return;
+        }
 
-            if (changed) {
-                usuarioRepository.save(usuario);
-            }
+        Usuario admin = new Usuario();
+        admin.setUsername(normalizeUsername(defaultAdminUsername));
+        admin.setNome("Administrador");
+        admin.setPassword(passwordEncoder.encode(defaultAdminPassword));
+        admin.setRole(Role.ADMIN);
+        admin.setAtivo(true);
+        usuarioRepository.save(admin);
+    }
+
+    private Usuario getEntity(UUID id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Id nao pode ser nulo");
+        }
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario nao encontrado"));
+    }
+
+    private UsuarioResponseDTO toResponseDTO(Usuario usuario) {
+        return new UsuarioResponseDTO(
+                usuario.getId(),
+                usuario.getUsername(),
+                usuario.getNome(),
+                usuario.getRole().name(),
+                usuario.getAtivo(),
+                usuario.getCreatedAt());
+    }
+
+    private String normalizeUsername(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            throw new BusinessException("Username e obrigatorio");
+        }
+        return username.trim().toLowerCase();
+    }
+
+    private String normalizeNome(String nome) {
+        if (nome == null || nome.trim().isEmpty()) {
+            throw new BusinessException("Nome e obrigatorio");
+        }
+        return nome.trim();
+    }
+
+    private void validateAtLeastOneAdmin(Role oldRole, Boolean oldAtivo, Role newRole, Boolean newAtivo, UUID currentId) {
+        boolean eraAdminAtivo = oldRole == Role.ADMIN && Boolean.TRUE.equals(oldAtivo);
+        boolean continuaAdminAtivo = newRole == Role.ADMIN && Boolean.TRUE.equals(newAtivo);
+
+        if (eraAdminAtivo && !continuaAdminAtivo && countActiveAdminsExcluding(currentId) == 0) {
+            throw new BusinessException("Nao e permitido remover o ultimo administrador ativo");
         }
     }
 
+    private long countActiveAdminsExcluding(UUID excludedId) {
+        return usuarioRepository.findAll().stream()
+                .filter(usuario -> !usuario.getId().equals(excludedId))
+                .filter(usuario -> usuario.getRole() == Role.ADMIN)
+                .filter(usuario -> Boolean.TRUE.equals(usuario.getAtivo()))
+                .count();
+    }
+
+    private Sort parseSort(String sort) {
+        if (sort == null || sort.isBlank()) {
+            return Sort.by(Sort.Direction.DESC, "createdAt");
+        }
+
+        java.util.List<String> allowedFields = java.util.List.of("username", "nome", "role", "ativo", "createdAt", "updatedAt");
+        String[] parts = sort.split(",", 2);
+        String field = allowedFields.contains(parts[0]) ? parts[0] : "createdAt";
+        Sort.Direction direction = parts.length > 1 && "asc".equalsIgnoreCase(parts[1])
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
+        return Sort.by(direction, field);
+    }
 }
