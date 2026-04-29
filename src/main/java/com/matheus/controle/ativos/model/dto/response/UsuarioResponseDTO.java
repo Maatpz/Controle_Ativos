@@ -1,5 +1,6 @@
 package com.matheus.controle.ativos.model.dto.response;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import lombok.AllArgsConstructor;
@@ -15,4 +16,6 @@ public class UsuarioResponseDTO {
     private String username;
     private String nome;
     private String role;
+    private Boolean ativo;
+    private LocalDateTime createdAt;
 }
