@@ -26,7 +26,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.matheus.controle.ativos.service.AuditoriaService;
 
 import jakarta.servlet.http.HttpServletResponse;
-
 @Configuration
 @EnableWebSecurity
 @org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
@@ -37,6 +36,12 @@ public class SecurityConfig {
 
         @Value("${app.security.allowed-origins:http://localhost:5173,http://localhost:4173}")
         private String allowedOrigins;
+
+        @Value("${app.security.csrf-cookie-secure:false}")
+        private boolean csrfCookieSecure;
+
+        @Value("${app.security.csrf-cookie-same-site:lax}")
+        private String csrfCookieSameSite;
 
         public SecurityConfig(AuditoriaService auditoriaService, ObjectMapper objectMapper) {
                 this.auditoriaService = auditoriaService;
@@ -52,7 +57,7 @@ public class SecurityConfig {
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                 http
                                 .csrf(csrf -> csrf
-                                                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                                                .csrfTokenRepository(csrfTokenRepository())
                                                 .ignoringRequestMatchers("/h2-console/**"))
                                 .cors(cors -> {
                                 })
@@ -81,6 +86,16 @@ public class SecurityConfig {
                                 .logout(logout -> logout.disable());
 
                 return http.build();
+        }
+
+        @Bean
+        public CookieCsrfTokenRepository csrfTokenRepository() {
+                CookieCsrfTokenRepository repository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+                repository.setCookieCustomizer(builder -> builder
+                                .sameSite(csrfCookieSameSite)
+                                .secure(csrfCookieSecure)
+                                .path("/"));
+                return repository;
         }
 
         @Bean
