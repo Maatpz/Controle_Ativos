@@ -1,6 +1,21 @@
 import axios from 'axios'
 
-const apiBaseUrl = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || 'http://localhost:8080'
+const configuredApiUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim()
+const fallbackProductionApiUrl = 'https://controleativos-production.up.railway.app'
+
+function resolveApiBaseUrl() {
+  if (configuredApiUrl) {
+    return configuredApiUrl.replace(/\/$/, '')
+  }
+
+  if (typeof window !== 'undefined' && window.location.hostname.endsWith('vercel.app')) {
+    return fallbackProductionApiUrl
+  }
+
+  return 'http://localhost:8080'
+}
+
+const apiBaseUrl = resolveApiBaseUrl()
 
 const apiClient = axios.create({
   baseURL: apiBaseUrl,
