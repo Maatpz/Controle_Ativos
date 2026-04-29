@@ -1,100 +1,96 @@
 package com.matheus.controle.ativos.controller;
 
-import org.springframework.web.bind.annotation.*;
-
-import com.matheus.controle.ativos.model.dto.request.AtivoRequestDTO;
-import com.matheus.controle.ativos.model.dto.response.AtivoResponseDTO;
-import com.matheus.controle.ativos.model.enums.Status;
-import com.matheus.controle.ativos.service.AtivoService;
-
-import io.swagger.v3.oas.annotations.tags.Tag;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
-import jakarta.validation.Valid;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.matheus.controle.ativos.model.dto.request.AtivoRequestDTO;
+import com.matheus.controle.ativos.model.dto.response.AtivoResponseDTO;
+import com.matheus.controle.ativos.model.dto.response.PageResponseDTO;
+import com.matheus.controle.ativos.service.AtivoService;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/ativos")
 @Tag(name = "Ativos", description = "API de gerenciamento de ativos")
-@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN','USER')")
+@org.springframework.validation.annotation.Validated
 public class AtivoController {
 
-    @Autowired
-    private AtivoService ativoService;
+    private final AtivoService ativoService;
 
     @PostMapping
-    public ResponseEntity<?> createAtivo(@Valid @RequestBody AtivoRequestDTO ativoRequest) {
-        try {
-            AtivoResponseDTO novoAtivo = ativoService.criarAtivo(ativoRequest);
-            return ResponseEntity.status(HttpStatus.CREATED).body(novoAtivo);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro ao criar ativo: " + e.getMessage());
-        }
+    public ResponseEntity<AtivoResponseDTO> createAtivo(@Valid @RequestBody AtivoRequestDTO ativoRequest) {
+        return ResponseEntity.status(201).body(ativoService.criarAtivo(ativoRequest));
     }
 
     @GetMapping
-    public ResponseEntity<List<AtivoResponseDTO>> getAllAtivos() {
-        List<AtivoResponseDTO> ativos = ativoService.findAllDTO();
-        return ResponseEntity.ok(ativos);
+    public ResponseEntity<PageResponseDTO<AtivoResponseDTO>> getAllAtivos(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+            @RequestParam(defaultValue = "updatedAt,desc") String sort,
+            @RequestParam(required = false) @Size(max = 100) String termo,
+            @RequestParam(required = false) @Size(max = 100) String nome,
+            @RequestParam(required = false) @Size(max = 100) String responsavel,
+            @RequestParam(required = false) @Size(max = 50) String patrimonio) {
+        return ResponseEntity.ok(ativoService.listar(page, size, sort, termo, nome, responsavel, patrimonio));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<AtivoResponseDTO> getAtivoById(@PathVariable UUID id) {
-        return ativoService.findByIdDTO(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(ativoService.buscarPorId(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateAtivo(@PathVariable UUID id,
+    public ResponseEntity<AtivoResponseDTO> updateAtivo(
+            @PathVariable UUID id,
             @Valid @RequestBody AtivoRequestDTO ativoRequest) {
-        try {
-            AtivoResponseDTO ativoAtualizado = ativoService.atualizarAtivo(id, ativoRequest);
-            if (ativoAtualizado != null) {
-                return ResponseEntity.ok(ativoAtualizado);
-            } else {
-                return ResponseEntity.notFound().build();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erro ao atualizar ativo: " + e.getMessage());
-        }
+        return ResponseEntity.ok(ativoService.atualizarAtivo(id, ativoRequest));
     }
 
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAtivo(@PathVariable UUID id) {
-        try {
-            if (ativoService.existsById(id)) {
-                ativoService.deleteById(id);
-                return ResponseEntity.noContent().build();
-            } else {
-                return ResponseEntity.notFound().build();
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        ativoService.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<AtivoResponseDTO>> searchAtivos(@RequestParam(required = false) String termo) {
-        List<AtivoResponseDTO> ativos = ativoService.findByTermoGeralDTO(termo);
-        return ResponseEntity.ok(ativos);
+    public ResponseEntity<PageResponseDTO<AtivoResponseDTO>> searchAtivos(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+            @RequestParam(defaultValue = "updatedAt,desc") String sort,
+            @RequestParam(required = false) @Size(max = 100) String termo) {
+        return ResponseEntity.ok(ativoService.listar(page, size, sort, termo, null, null, null));
     }
 
     @GetMapping(value = "/export/txt", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> exportarTxt(@RequestParam(required = false) String termo) {
-        List<AtivoResponseDTO> ativos = (termo != null && !termo.isBlank())
-                ? ativoService.findByTermoGeralDTO(termo.trim())
-                : ativoService.findAllDTO();
+    public ResponseEntity<String> exportarTxt(
+            @RequestParam(required = false) String termo,
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) String responsavel,
+            @RequestParam(required = false) String patrimonio) {
+        List<AtivoResponseDTO> ativos = ativoService.listarParaExportacao(termo, nome, responsavel, patrimonio);
         String conteudo = ativoService.exportarTxt(ativos);
         String filename = "ativos-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + ".txt";
         return ResponseEntity.ok()
@@ -102,49 +98,4 @@ public class AtivoController {
                 .contentType(MediaType.parseMediaType("text/plain;charset=UTF-8"))
                 .body(conteudo);
     }
-
-    @GetMapping("/search/nome")
-    public ResponseEntity<List<AtivoResponseDTO>> searchByNome(@RequestParam String nome) {
-        List<AtivoResponseDTO> ativos = ativoService.findByNomeDTO(nome);
-        return ResponseEntity.ok(ativos);
-    }
-
-    @GetMapping("/search/responsavel")
-    public ResponseEntity<List<AtivoResponseDTO>> searchByResponsavel(@RequestParam String responsavel) {
-        List<AtivoResponseDTO> ativos = ativoService.findByResponsavelDTO(responsavel);
-        return ResponseEntity.ok(ativos);
-    }
-
-    @GetMapping("/search/patrimonio")
-    public ResponseEntity<AtivoResponseDTO> searchByPatrimonio(@RequestParam String patrimonio) {
-        return ativoService.findByPatrimonioDTO(patrimonio)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/search/setor")
-    public ResponseEntity<List<AtivoResponseDTO>> searchBySetor(@RequestParam String setor) {
-        List<AtivoResponseDTO> ativos = ativoService.findBySetorDTO(setor);
-        return ResponseEntity.ok(ativos);
-    }
-
-    @GetMapping("/search/status")
-    public ResponseEntity<List<AtivoResponseDTO>> searchByStatus(@RequestParam Status status) {
-        List<AtivoResponseDTO> ativos = ativoService.findByStatusDTO(status);
-        return ResponseEntity.ok(ativos);
-    }
-
-    @GetMapping("/search/advanced")
-    public ResponseEntity<List<AtivoResponseDTO>> searchAdvanced(
-            @RequestParam(required = false) String nome,
-            @RequestParam(required = false) String responsavel,
-            @RequestParam(required = false) String patrimonio,
-            @RequestParam(required = false) String setor,
-            @RequestParam(required = false) Status status) {
-
-        List<AtivoResponseDTO> ativos = ativoService.findByMultipleFieldsDTO(nome, responsavel, patrimonio, setor,
-                status);
-        return ResponseEntity.ok(ativos);
-    }
-
 }
