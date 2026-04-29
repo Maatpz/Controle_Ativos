@@ -1,0 +1,13 @@
+.git
+.gitignore
+.idea
+.vscode
+frontend
+target
+node_modules
+README.md
+HELP.md
+1.PNG
+2.PNG
+3.PNG
+nixpacks.toml
