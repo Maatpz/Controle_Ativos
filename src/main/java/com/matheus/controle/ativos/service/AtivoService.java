@@ -1,114 +1,132 @@
 package com.matheus.controle.ativos.service;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.matheus.controle.ativos.exception.BusinessException;
+import com.matheus.controle.ativos.exception.ResourceNotFoundException;
 import com.matheus.controle.ativos.model.Ativo;
 import com.matheus.controle.ativos.model.dto.request.AtivoRequestDTO;
 import com.matheus.controle.ativos.model.dto.response.AtivoResponseDTO;
+import com.matheus.controle.ativos.model.dto.response.PageResponseDTO;
 import com.matheus.controle.ativos.model.enums.Status;
 import com.matheus.controle.ativos.repository.AtivoRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class AtivoService {
 
-    @Autowired
-    private AtivoRepository ativoRepository;
+    private static final int MAX_EXPORT_SIZE = 1000;
 
-    public AtivoResponseDTO toResponseDTO(Ativo ativo) {
-        AtivoResponseDTO dto = new AtivoResponseDTO();
-        dto.setId(ativo.getId());
-        dto.setNomeAtivo(ativo.getNomeAtivo());
-        dto.setStatus(ativo.getStatus());
-        dto.setLocalidade(ativo.getLocalidade());
-        dto.setSetor(ativo.getSetor());
-        dto.setResponsavel(ativo.getResponsavel());
-        dto.setPatrimonio(ativo.getPatrimonio());
-        return dto;
-    }
+    private final AtivoRepository ativoRepository;
+    private final AuditoriaService auditoriaService;
 
-    public Ativo toEntity(AtivoRequestDTO dto) {
-        Ativo ativo = new Ativo();
-        ativo.setNomeAtivo(dto.getNomeAtivo());
-        ativo.setStatus(dto.getStatus());
-        ativo.setLocalidade(dto.getLocalidade());
-        ativo.setSetor(dto.getSetor());
-        ativo.setResponsavel(dto.getResponsavel());
-        ativo.setPatrimonio(dto.getPatrimonio());
-        return ativo;
-    }
-
-    private List<AtivoResponseDTO> toResponseDTOList(List<Ativo> ativos) {
-        return ativos.stream().map(this::toResponseDTO).collect(Collectors.toList());
-    }
-
-
+    @Transactional
     public AtivoResponseDTO criarAtivo(AtivoRequestDTO request) {
-        Ativo ativo = toEntity(request);
-        Ativo salvo = save(ativo);
+        String patrimonio = normalizePatrimonio(request.getPatrimonio());
+        if (ativoRepository.existsByPatrimonioIgnoreCase(patrimonio)) {
+            throw new BusinessException("Ja existe um ativo com o patrimonio informado");
+        }
+
+        Ativo ativo = new Ativo();
+        apply(ativo, request, patrimonio);
+        Ativo salvo = ativoRepository.save(ativo);
+        auditoriaService.registrar(
+                "ATIVO",
+                salvo.getId().toString(),
+                "CRIACAO",
+                "Ativo cadastrado: " + resumo(salvo));
         return toResponseDTO(salvo);
     }
 
+    @Transactional
     public AtivoResponseDTO atualizarAtivo(UUID id, AtivoRequestDTO request) {
-        Optional<Ativo> ativoExistente = findById(id);
-        if (ativoExistente.isPresent()) {
-            Ativo ativo = ativoExistente.get();
-
-            // Atualização dos campos permitidos
-            if (request.getNomeAtivo() != null)
-                ativo.setNomeAtivo(request.getNomeAtivo());
-            if (request.getStatus() != null)
-                ativo.setStatus(request.getStatus());
-            if (request.getLocalidade() != null)
-                ativo.setLocalidade(request.getLocalidade());
-            if (request.getSetor() != null)
-                ativo.setSetor(request.getSetor());
-            if (request.getResponsavel() != null)
-                ativo.setResponsavel(request.getResponsavel());
-            if (request.getPatrimonio() != null)
-                ativo.setPatrimonio(request.getPatrimonio());
-
-            Ativo salvo = save(ativo);
-            return toResponseDTO(salvo);
+        Ativo ativo = getEntity(id);
+        String patrimonio = normalizePatrimonio(request.getPatrimonio());
+        Optional<Ativo> ativoComMesmoPatrimonio = ativoRepository.findByPatrimonioIgnoreCase(patrimonio);
+        if (ativoComMesmoPatrimonio.isPresent() && !ativoComMesmoPatrimonio.get().getId().equals(id)) {
+            throw new BusinessException("Ja existe um ativo com o patrimonio informado");
         }
-        return null;
+
+        String detalhesAlteracao = buildChangeLog(ativo, request, patrimonio);
+        apply(ativo, request, patrimonio);
+        Ativo salvo = ativoRepository.save(ativo);
+        auditoriaService.registrar(
+                "ATIVO",
+                salvo.getId().toString(),
+                "ATUALIZACAO",
+                detalhesAlteracao);
+        return toResponseDTO(salvo);
     }
 
-    public List<AtivoResponseDTO> findAllDTO() {
-        return toResponseDTOList(findAll());
+    public PageResponseDTO<AtivoResponseDTO> listar(
+            int page,
+            int size,
+            String sort,
+            String termo,
+            String nome,
+            String responsavel,
+            String patrimonio) {
+        Page<AtivoResponseDTO> ativos = ativoRepository.findAll(
+                buildSpecification(termo, nome, responsavel, patrimonio),
+                buildPageRequest(page, size, sort))
+                .map(this::toResponseDTO);
+        return PageResponseDTO.from(ativos);
     }
 
-    public Optional<AtivoResponseDTO> findByIdDTO(UUID id) {
-        return findById(id).map(this::toResponseDTO);
+    public AtivoResponseDTO buscarPorId(UUID id) {
+        return toResponseDTO(getEntity(id));
     }
 
-    public List<AtivoResponseDTO> findByNomeDTO(String nomeAtivo) {
-        return toResponseDTOList(findByNome(nomeAtivo));
+    public List<AtivoResponseDTO> listarParaExportacao(String termo, String nome, String responsavel, String patrimonio) {
+        if (!hasText(termo) && !hasText(nome) && !hasText(responsavel) && !hasText(patrimonio)) {
+            throw new BusinessException("Informe ao menos um filtro para exportar ativos");
+        }
+
+        Page<Ativo> ativos = ativoRepository.findAll(
+                buildSpecification(termo, nome, responsavel, patrimonio),
+                PageRequest.of(0, MAX_EXPORT_SIZE + 1, Sort.by(Sort.Direction.DESC, "updatedAt")));
+        if (ativos.getTotalElements() > MAX_EXPORT_SIZE) {
+            throw new BusinessException("Exportacao limitada a " + MAX_EXPORT_SIZE + " ativos por vez");
+        }
+
+        return ativos.getContent().stream().map(this::toResponseDTO).toList();
     }
 
-    public List<AtivoResponseDTO> findByResponsavelDTO(String responsavel) {
-        return toResponseDTOList(findByResponsavel(responsavel));
+    @Transactional
+    public void deletar(UUID id) {
+        Ativo ativo = getEntity(id);
+        ativoRepository.delete(ativo);
+        auditoriaService.registrar(
+                "ATIVO",
+                id.toString(),
+                "EXCLUSAO",
+                "Ativo removido: " + resumo(ativo));
     }
 
-    public Optional<AtivoResponseDTO> findByPatrimonioDTO(String patrimonio) {
-        return findByPatrimonio(patrimonio).map(this::toResponseDTO);
-    }
-
-    public List<AtivoResponseDTO> findByStatusDTO(Status status) {
-        return toResponseDTOList(findByStatus(status));
-    }
-
-    public List<AtivoResponseDTO> findBySetorDTO(String setor) {
-        return toResponseDTOList(findBySetor(setor));
-    }
-
-    public List<AtivoResponseDTO> findByTermoGeralDTO(String termo) {
-        return toResponseDTOList(findByTermoGeral(termo));
+    public Map<String, Object> dashboardResumo() {
+        Map<String, Object> resumo = new LinkedHashMap<>();
+        resumo.put("totalAtivos", ativoRepository.count());
+        resumo.put("operacionais", ativoRepository.countByStatus(Status.OPERACIONAL));
+        resumo.put("estoque", ativoRepository.countByStatus(Status.ESTOQUE));
+        resumo.put("manutencao", ativoRepository.countByStatus(Status.MANUTENCAO));
+        resumo.put("porSetor", agruparPorTexto(ativoRepository.countGroupBySetor(), false));
+        resumo.put("porCategoria", agruparPorTexto(ativoRepository.countGroupByCategoria(), false));
+        resumo.put("porStatus", agruparPorTexto(ativoRepository.countGroupByStatus(), true));
+        return resumo;
     }
 
     public String exportarTxt(List<AtivoResponseDTO> ativos) {
@@ -116,220 +134,177 @@ public class AtivoService {
         sb.append("CONTROLE DE ATIVOS").append(System.lineSeparator());
         sb.append("Total: ").append(ativos.size()).append(" ativo(s)").append(System.lineSeparator());
         sb.append(System.lineSeparator());
-        sb.append("Nome | Patrimônio | Status | Responsável").append(System.lineSeparator());
+        sb.append("Nome | Patrimonio | Status | Responsavel | Setor | Categoria").append(System.lineSeparator());
 
-        for (AtivoResponseDTO a : ativos) {
-            String nome = a.getNomeAtivo() != null ? a.getNomeAtivo() : "-";
-            String patrimonio = a.getPatrimonio() != null ? a.getPatrimonio() : "-";
-            String status = statusParaTxt(a.getStatus());
-            String responsavel = a.getResponsavel() != null ? a.getResponsavel() : "-";
-            sb.append(nome).append(" | ").append(patrimonio).append(" | ").append(status).append(" | ").append(responsavel)
+        for (AtivoResponseDTO ativo : ativos) {
+            sb.append(ativo.getNomeAtivo()).append(" | ")
+                    .append(ativo.getPatrimonio()).append(" | ")
+                    .append(ativo.getStatus()).append(" | ")
+                    .append(ativo.getResponsavel()).append(" | ")
+                    .append(ativo.getSetor()).append(" | ")
+                    .append(ativo.getCategoria())
                     .append(System.lineSeparator());
         }
         return sb.toString();
     }
 
-    private static String statusParaTxt(Status status) {
-        if (status == null) return "-";
-        switch (status) {
-            case OPERACIONAL: return "Operacional";
-            case ESTOQUE: return "Estoque";
-            case MANUTENCAO: return "Manutenção";
-            default: return status.name();
-        }
-    }
-
-    public List<AtivoResponseDTO> findByMultipleFieldsDTO(String nome, String responsavel,
-            String patrimonio, String setor, Status status) {
-        return toResponseDTOList(findByMultipleFields(nome, responsavel, patrimonio, setor, status));
-    }
-
-
-    public List<Ativo> findAll() {
-        return ativoRepository.findAll();
-    }
-
-    public Optional<Ativo> findById(UUID id) {
+    private Ativo getEntity(UUID id) {
         if (id == null) {
-            throw new IllegalArgumentException("Id não pode ser nulo");
+            throw new IllegalArgumentException("Id nao pode ser nulo");
         }
-        return ativoRepository.findById(id);
+        return ativoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ativo nao encontrado"));
     }
 
-    public Ativo save(Ativo ativo) {
-        if (ativo == null) {
-            throw new IllegalArgumentException("Ativo não pode ser nulo");
+    private void apply(Ativo ativo, AtivoRequestDTO request, String patrimonioNormalizado) {
+        ativo.setNomeAtivo(normalizeOptional(request.getNomeAtivo()));
+        ativo.setSetor(normalizeOptional(request.getSetor()));
+        ativo.setResponsavel(normalizeOptional(request.getResponsavel()));
+        ativo.setCategoria(normalizeOptional(request.getCategoria()));
+        ativo.setPatrimonio(patrimonioNormalizado);
+        ativo.setStatus(normalizeStatus(request.getStatus()));
+        ativo.setMacAddressEthernet(normalizeOptional(request.getMacAddressEthernet()));
+        ativo.setObservacoes(normalizeOptional(request.getObservacoes()));
+    }
+
+    private AtivoResponseDTO toResponseDTO(Ativo ativo) {
+        return new AtivoResponseDTO(
+                ativo.getId(),
+                ativo.getNomeAtivo(),
+                ativo.getSetor(),
+                ativo.getResponsavel(),
+                ativo.getCategoria(),
+                ativo.getPatrimonio(),
+                ativo.getStatus(),
+                ativo.getMacAddressEthernet(),
+                ativo.getObservacoes(),
+                ativo.getCreatedAt(),
+                ativo.getUpdatedAt());
+    }
+
+    private String normalizeRequired(String value, String fieldName) {
+        if (!hasText(value)) {
+            throw new BusinessException(fieldName + " e obrigatorio");
         }
-        return ativoRepository.save(ativo);
+        return value.trim();
     }
 
-    public void deleteById(UUID id) {
-        if (id == null) {
-            throw new IllegalArgumentException("Id não pode ser nulo");
+    private String normalizePatrimonio(String patrimonio) {
+        return normalizeRequired(patrimonio, "Patrimonio").toUpperCase();
+    }
+
+    private String normalizeNullable(String value) {
+        return hasText(value) ? value.trim() : null;
+    }
+
+    private String normalizeOptional(String value) {
+        return hasText(value) ? value.trim() : null;
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
+    }
+
+    private String labelOrDefault(String value) {
+        return hasText(value) ? value.trim() : "Nao informado";
+    }
+
+    private com.matheus.controle.ativos.model.enums.Status normalizeStatus(
+            com.matheus.controle.ativos.model.enums.Status status) {
+        return status != null ? status : com.matheus.controle.ativos.model.enums.Status.OPERACIONAL;
+    }
+
+    private String buildChangeLog(Ativo atual, AtivoRequestDTO request, String patrimonioNormalizado) {
+        List<String> changes = new ArrayList<>();
+        addIfChanged(changes, "nomeAtivo", atual.getNomeAtivo(), normalizeOptional(request.getNomeAtivo()));
+        addIfChanged(changes, "setor", atual.getSetor(), normalizeOptional(request.getSetor()));
+        addIfChanged(changes, "responsavel", atual.getResponsavel(), normalizeOptional(request.getResponsavel()));
+        addIfChanged(changes, "categoria", atual.getCategoria(), normalizeOptional(request.getCategoria()));
+        addIfChanged(changes, "patrimonio", atual.getPatrimonio(), patrimonioNormalizado);
+        addIfChanged(changes, "status", atual.getStatus() == null ? null : atual.getStatus().name(),
+                normalizeStatus(request.getStatus()).name());
+        addIfChanged(changes, "macAddressEthernet", atual.getMacAddressEthernet(),
+                normalizeOptional(request.getMacAddressEthernet()));
+        addIfChanged(changes, "observacoes", atual.getObservacoes(), normalizeOptional(request.getObservacoes()));
+
+        if (changes.isEmpty()) {
+            return "Atualizacao sem alteracao efetiva nos dados do ativo " + atual.getPatrimonio();
         }
-        ativoRepository.deleteById(id);
+
+        return "Ativo atualizado (" + atual.getPatrimonio() + "): " + String.join("; ", changes);
     }
 
-    public boolean existsById(UUID id) {
-        if (id == null) {
-            throw new IllegalArgumentException("Id não pode ser nulo");
+    private void addIfChanged(List<String> changes, String field, String oldValue, String newValue) {
+        String before = oldValue == null ? "" : oldValue;
+        String after = newValue == null ? "" : newValue;
+        if (!before.equals(after)) {
+            changes.add(field + ": '" + before + "' -> '" + after + "'");
         }
-        return ativoRepository.existsById(id);
     }
 
-    public List<Ativo> findByNome(String nomeAtivo) {
-        if (nomeAtivo == null) {
-            throw new IllegalArgumentException("Nome não pode ser nulo");
+    private String resumo(Ativo ativo) {
+        String nome = hasText(ativo.getNomeAtivo()) ? ativo.getNomeAtivo() : "Sem nome";
+        String status = ativo.getStatus() != null ? ativo.getStatus().name() : "SEM_STATUS";
+        return nome + " / patrimonio " + ativo.getPatrimonio() + " / status " + status;
+    }
+
+    private List<Map<String, Object>> agruparPorTexto(List<Object[]> rows, boolean enumValue) {
+        return rows.stream()
+                .map(row -> {
+                    String nome = row[0] == null
+                            ? "Nao informado"
+                            : enumValue ? row[0].toString() : labelOrDefault(row[0].toString());
+                    Long total = row[1] instanceof Long ? (Long) row[1] : Long.valueOf(String.valueOf(row[1]));
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("nome", nome);
+                    item.put("total", total);
+                    return item;
+                })
+                .sorted((left, right) -> String.valueOf(left.get("nome")).compareToIgnoreCase(String.valueOf(right.get("nome"))))
+                .toList();
+    }
+
+    private Specification<Ativo> buildSpecification(String termo, String nome, String responsavel, String patrimonio) {
+        return (root, query, cb) -> {
+            List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+
+            if (hasText(termo)) {
+                String value = "%" + termo.trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("nomeAtivo")), value),
+                        cb.like(cb.lower(root.get("responsavel")), value),
+                        cb.like(cb.lower(root.get("patrimonio")), value)));
+            }
+            if (hasText(nome)) {
+                predicates.add(cb.like(cb.lower(root.get("nomeAtivo")), "%" + nome.trim().toLowerCase() + "%"));
+            }
+            if (hasText(responsavel)) {
+                predicates.add(cb.like(cb.lower(root.get("responsavel")), "%" + responsavel.trim().toLowerCase() + "%"));
+            }
+            if (hasText(patrimonio)) {
+                predicates.add(cb.like(cb.lower(root.get("patrimonio")), "%" + patrimonio.trim().toLowerCase() + "%"));
+            }
+
+            return cb.and(predicates.toArray(jakarta.persistence.criteria.Predicate[]::new));
+        };
+    }
+
+    private PageRequest buildPageRequest(int page, int size, String sort) {
+        return PageRequest.of(page, size, parseSort(sort,
+                List.of("nomeAtivo", "patrimonio", "responsavel", "setor", "categoria", "status", "createdAt", "updatedAt"),
+                "updatedAt"));
+    }
+
+    private Sort parseSort(String sort, List<String> allowedFields, String defaultField) {
+        if (!hasText(sort)) {
+            return Sort.by(Sort.Direction.DESC, defaultField);
         }
-        return ativoRepository.findByNomeAtivoContainingIgnoreCase(nomeAtivo);
+
+        String[] parts = sort.split(",", 2);
+        String field = allowedFields.contains(parts[0]) ? parts[0] : defaultField;
+        Sort.Direction direction = parts.length > 1 && "asc".equalsIgnoreCase(parts[1])
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
+        return Sort.by(direction, field);
     }
-
-    public List<Ativo> findByResponsavel(String responsavel) {
-        return ativoRepository.findByResponsavelContainingIgnoreCase(responsavel);
-    }
-
-    public Optional<Ativo> findByPatrimonio(String patrimonio) {
-        return ativoRepository.findByPatrimonio(patrimonio);
-    }
-
-    public List<Ativo> findByStatus(Status status) {
-        return ativoRepository.findByStatus(status);
-    }
-
-    // public List<Ativo> findByCategoria(String categoria) {
-    // return ativoRepository.findByCategoriaContainingIgnoreCase(categoria);
-    // }
-
-    public List<Ativo> findBySetor(String setor) {
-        return ativoRepository.findBySetorContainingIgnoreCase(setor);
-    }
-
-    public List<Ativo> findByLocalidade(String localidade) {
-        return ativoRepository.findByLocalidadeContainingIgnoreCase(localidade);
-    }
-
-    // em fase
-    public List<Ativo> findByMultipleFields(String nome, String responsavel,
-            String patrimonio, String setor, Status status) {
-        return ativoRepository.findByMultipleFields(nome, responsavel, patrimonio,
-                setor, status);
-    }
-
-    // Busca geral por termo em fase
-    public List<Ativo> findByTermoGeral(String termo) {
-        if (termo == null || termo.trim().isEmpty()) {
-            return findAll();
-        }
-        return ativoRepository.findByTermoGeral(termo.trim());
-    }
-
-    public Ativo updateAtivo(UUID id, Ativo ativoAtualizado) {
-        Optional<Ativo> ativoExistente = findById(id);
-        if (ativoExistente.isPresent()) {
-            Ativo ativo = ativoExistente.get();
-
-            if (ativoAtualizado.getNomeAtivo() != null)
-                ativo.setNomeAtivo(ativoAtualizado.getNomeAtivo());
-            // if (ativoAtualizado.getDominio() != null)
-            // ativo.setDominio(ativoAtualizado.getDominio());
-            if (ativoAtualizado.getStatus() != null)
-                ativo.setStatus(ativoAtualizado.getStatus());
-            if (ativoAtualizado.getLocalidade() != null)
-                ativo.setLocalidade(ativoAtualizado.getLocalidade());
-            if (ativoAtualizado.getSetor() != null)
-                ativo.setSetor(ativoAtualizado.getSetor());
-            if (ativoAtualizado.getResponsavel() != null)
-                ativo.setResponsavel(ativoAtualizado.getResponsavel());
-            // if (ativoAtualizado.getLicenca() != null)
-            // ativo.setLicenca(ativoAtualizado.getLicenca());
-            // if (ativoAtualizado.getCategoria() != null)
-            // ativo.setCategoria(ativoAtualizado.getCategoria());
-            // if (ativoAtualizado.getMarcaFabricante() != null)
-            // ativo.setMarcaFabricante(ativoAtualizado.getMarcaFabricante());
-            // if (ativoAtualizado.getModelo() != null)
-            // ativo.setModelo(ativoAtualizado.getModelo());
-            // if (ativoAtualizado.getSerialNumber() != null)
-            // ativo.setSerialNumber(ativoAtualizado.getSerialNumber());
-            if (ativoAtualizado.getPatrimonio() != null)
-                ativo.setPatrimonio(ativoAtualizado.getPatrimonio());
-            // if (ativoAtualizado.getLinha() != null)
-            // ativo.setLinha(ativoAtualizado.getLinha());
-            // if (ativoAtualizado.getImei() != null)
-            // ativo.setImei(ativoAtualizado.getImei());
-            // if (ativoAtualizado.getMacEthernet() != null)
-            // ativo.setMacEthernet(ativoAtualizado.getMacEthernet());
-            // if (ativoAtualizado.getMacWifi() != null)
-            // ativo.setMacWifi(ativoAtualizado.getMacWifi());
-            // if (ativoAtualizado.getIpFixado() != null)
-            // ativo.setIpFixado(ativoAtualizado.getIpFixado());
-            // if (ativoAtualizado.getProcessador() != null)
-            // ativo.setProcessador(ativoAtualizado.getProcessador());
-            // if (ativoAtualizado.getMemoriaRam() != null)
-            // ativo.setMemoriaRam(ativoAtualizado.getMemoriaRam());
-            // if (ativoAtualizado.getArmazenamento() != null)
-            // ativo.setArmazenamento(ativoAtualizado.getArmazenamento());
-            // if (ativoAtualizado.getCameraIntegrada() != null)
-            // ativo.setCameraIntegrada(ativoAtualizado.getCameraIntegrada());
-            // if (ativoAtualizado.getClassificacaoInfo() != null)
-            // ativo.setClassificacaoInfo(ativoAtualizado.getClassificacaoInfo());
-            // if (ativoAtualizado.getConfidencialidade() != null)
-            // ativo.setConfidencialidade(ativoAtualizado.getConfidencialidade());
-            // if (ativoAtualizado.getIntegridade() != null)
-            // ativo.setIntegridade(ativoAtualizado.getIntegridade());
-            // if (ativoAtualizado.getDisponibilidade() != null)
-            // ativo.setDisponibilidade(ativoAtualizado.getDisponibilidade());
-            // if (ativoAtualizado.getFornecedor() != null)
-            // ativo.setFornecedor(ativoAtualizado.getFornecedor());
-            // if (ativoAtualizado.getDataAquisicao() != null)
-            // ativo.setDataAquisicao(ativoAtualizado.getDataAquisicao());
-            // if (ativoAtualizado.getGarantiaSuporte() != null)
-            // ativo.setGarantiaSuporte(ativoAtualizado.getGarantiaSuporte());
-            // if (ativoAtualizado.getContatoSuporte() != null)
-            // ativo.setContatoSuporte(ativoAtualizado.getContatoSuporte());
-            // if (ativoAtualizado.getNotaFiscal() != null)
-            // ativo.setNotaFiscal(ativoAtualizado.getNotaFiscal());
-            // if (ativoAtualizado.getRegistroMudanca() != null)
-            // ativo.setRegistroMudanca(ativoAtualizado.getRegistroMudanca());
-            // if (ativoAtualizado.getDataUltimaAvaliacao() != null)
-            // ativo.setDataUltimaAvaliacao(ativoAtualizado.getDataUltimaAvaliacao());
-            // if (ativoAtualizado.getProximaAvaliacao() != null)
-            // ativo.setProximaAvaliacao(ativoAtualizado.getProximaAvaliacao());
-            // if (ativoAtualizado.getBitlocker() != null)
-            // ativo.setBitlocker(ativoAtualizado.getBitlocker());
-            // if (ativoAtualizado.getAntivirusLicenca() != null)
-            // ativo.setAntivirusLicenca(ativoAtualizado.getAntivirusLicenca());
-            // if (ativoAtualizado.getAntivirusVersao() != null)
-            // ativo.setAntivirusVersao(ativoAtualizado.getAntivirusVersao());
-            // if (ativoAtualizado.getBartWazuh() != null)
-            // ativo.setBartWazuh(ativoAtualizado.getBartWazuh());
-            // if (ativoAtualizado.getChromeEnterprise() != null)
-            // ativo.setChromeEnterprise(ativoAtualizado.getChromeEnterprise());
-            // if (ativoAtualizado.getAcessoRemotoId() != null)
-            // ativo.setAcessoRemotoId(ativoAtualizado.getAcessoRemotoId());
-            // if (ativoAtualizado.getAcessoRemotoSenha() != null)
-            // ativo.setAcessoRemotoSenha(ativoAtualizado.getAcessoRemotoSenha());
-            // if (ativoAtualizado.getTermoCustodia() != null)
-            // ativo.setTermoCustodia(ativoAtualizado.getTermoCustodia());
-            // if (ativoAtualizado.getSenhaAdmin() != null)
-            // ativo.setSenhaAdmin(ativoAtualizado.getSenhaAdmin());
-            // if (ativoAtualizado.getBloqueioTela() != null)
-            // ativo.setBloqueioTela(ativoAtualizado.getBloqueioTela());
-            // if (ativoAtualizado.getContaAtribuida() != null)
-            // ativo.setContaAtribuida(ativoAtualizado.getContaAtribuida());
-            // if (ativoAtualizado.getSenhaContaAtribuida() != null)
-            // ativo.setSenhaContaAtribuida(ativoAtualizado.getSenhaContaAtribuida());
-            // if (ativoAtualizado.getContratoProcedimentos() != null)
-            // ativo.setContratoProcedimentos(ativoAtualizado.getContratoProcedimentos());
-            // if (ativoAtualizado.getItensConfiguracao() != null)
-            // ativo.setItensConfiguracao(ativoAtualizado.getItensConfiguracao());
-            // if (ativoAtualizado.getManutencaoPreventiva() != null)
-            // ativo.setManutencaoPreventiva(ativoAtualizado.getManutencaoPreventiva());
-            // if (ativoAtualizado.getObs() != null) ativo.setObs(ativoAtualizado.getObs());
-
-            return save(ativo);
-        }
-        return null;
-
-    }
-
 }
