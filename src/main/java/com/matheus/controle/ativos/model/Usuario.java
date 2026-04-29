@@ -1,9 +1,10 @@
 package com.matheus.controle.ativos.model;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import com.matheus.controle.ativos.model.enums.Role;
 
@@ -38,23 +39,32 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @NotBlank(message = "Nome de usuario obrigatório")
-    @Size(min = 3, max = 50, message = "Nome de usuario deve ser maior que três")
+    @NotBlank(message = "Nome de usuario obrigatorio")
+    @Size(min = 3, max = 50, message = "Nome de usuario deve ter entre 3 e 50 caracteres")
+    @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @NotBlank(message = "Senha obrigatória")
-    @Size(min = 4, message = "Senha deve ter no minimo 4 caracteres")
+    @NotBlank(message = "Senha obrigatoria")
+    @Column(nullable = false)
     private String password;
 
+    @NotBlank(message = "Nome obrigatorio")
+    @Size(max = 120, message = "Nome deve ter no maximo 120 caracteres")
+    @Column(nullable = false, length = 120)
     private String nome;
 
+    @Column(nullable = false)
     private Boolean ativo = true;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private Role role;
 
-    @Column(name = "created_at")
     @CreationTimestamp
-    private LocalDate createdAt;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }
