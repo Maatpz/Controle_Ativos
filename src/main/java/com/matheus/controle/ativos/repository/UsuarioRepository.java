@@ -3,18 +3,24 @@ package com.matheus.controle.ativos.repository;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.matheus.controle.ativos.model.Usuario;
+import com.matheus.controle.ativos.model.enums.Role;
 
-public interface UsuarioRepository extends JpaRepository <Usuario, UUID> {
+public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
-    // Optional<Usuario> findById (UUID id);
+    Optional<Usuario> findByUsernameIgnoreCase(String username);
 
-    Optional<Usuario> findByUsername (String username);
+    Optional<Usuario> findByUsernameIgnoreCaseAndAtivo(String username, Boolean ativo);
 
-    boolean existsByUsername(String username);
+    boolean existsByUsernameIgnoreCase(String username);
 
-    Optional<Usuario> findByUsernameAndAtivo(String username, Boolean Ativo);
-    
+    Page<Usuario> findAll(Pageable pageable);
+
+    long countByRole(Role role);
+
+    long countByRoleAndAtivoTrue(Role role);
 }
