@@ -32,10 +32,10 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final AuditoriaService auditoriaService;
 
-    @Value("${ADMIN_USERNAME:}")
+    @Value("${APP_ADMIN_USERNAME:}")
     private String defaultAdminUsername;
 
-    @Value("${ADMIN_PASSWORD:}")
+    @Value("${APP_ADMIN_PASSWORD:}")
     private String defaultAdminPassword;
 
     public PageResponseDTO<UsuarioResponseDTO> listar(int page, int size, String sort) {
