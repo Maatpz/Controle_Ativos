@@ -1,10 +1,8 @@
 package com.matheus.controle.ativos.model;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.UUID;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import com.matheus.controle.ativos.model.enums.Role;
 
@@ -15,6 +13,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -24,6 +24,8 @@ import lombok.Data;
 @Table(name = "tb_usuarios")
 @Data
 public class Usuario {
+
+    private static final ZoneId APP_ZONE_ID = ZoneId.of("America/Sao_Paulo");
 
     public Usuario(String username, String password, String nome, Role role) {
         this.username = username;
@@ -60,11 +62,23 @@ public class Usuario {
     @Column(nullable = false, length = 20)
     private Role role;
 
-    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    void prePersist() {
+        LocalDateTime now = LocalDateTime.now(APP_ZONE_ID);
+        if (createdAt == null) {
+            createdAt = now;
+        }
+        updatedAt = now;
+    }
+
+    @PreUpdate
+    void preUpdate() {
+        updatedAt = LocalDateTime.now(APP_ZONE_ID);
+    }
 }
