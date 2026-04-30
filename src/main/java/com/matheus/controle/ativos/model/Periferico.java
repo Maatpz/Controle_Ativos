@@ -1,10 +1,8 @@
 package com.matheus.controle.ativos.model;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.UUID;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import com.matheus.controle.ativos.model.enums.TipoPeriferico;
 
@@ -15,6 +13,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -30,6 +30,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Periferico {
+
+    private static final ZoneId APP_ZONE_ID = ZoneId.of("America/Sao_Paulo");
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -54,11 +56,23 @@ public class Periferico {
     @Column(length = 300)
     private String observacoes;
 
-    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    void prePersist() {
+        LocalDateTime now = LocalDateTime.now(APP_ZONE_ID);
+        if (createdAt == null) {
+            createdAt = now;
+        }
+        updatedAt = now;
+    }
+
+    @PreUpdate
+    void preUpdate() {
+        updatedAt = LocalDateTime.now(APP_ZONE_ID);
+    }
 }
