@@ -1,53 +1,219 @@
 # Controle de Ativos
 
-Este projeto surgiu inicialmente como uma iniciativa de estudos em tecnologias **Spring Boot**, mas devido uma necessidade pessoal de trabalho agora é utilizado para gerenciamento de ativos.
+Sistema web para controle operacional de ativos de TI, perifericos, usuarios e auditoria. O projeto e dividido em um backend Java com Spring Boot e um frontend React com Vite.
 
-O sistema permite o controle, mapeamento e manutenção de ativos (como equipamentos de TI)
+## Visao Geral
 
-## Tecnologias Utilizadas
+O sistema permite cadastrar, consultar, editar, excluir e exportar ativos, alem de acompanhar indicadores em dashboard. Tambem possui controle de perifericos, gerenciamento de usuarios administradores/usuarios comuns e trilha de auditoria das principais acoes.
 
-O projeto utiliza as seguintes stacks:
+## Funcionalidades
 
-- **Backend:** Java 21 com Spring Boot 3
-- **Segurança:** Spring Security (Controle de acesso)
-- **Banco de Dados:** PostgreSQL hospedado no **[Neon DB](https://neon.tech/)**
-- **Persistência:** Spring Data JPA / Hibernate
-- **Deployment:** **[Railway](https://railway.app/)**
-- **Interface:** HTML, CSS e JavaScript
-- **Integração:** Apache POI (Para leitura e importação de arquivos Excel `.xlsx`) (em andamento)  (export em txt atualmente)
-- **Documentação API:** Estudos noSwagger / OpenAPI
+- Autenticacao com Spring Security usando sessao HTTP, cookies e CSRF.
+- Controle de acesso por perfil: `ADMIN` e `USER`.
+- Dashboard com resumo de ativos, perifericos e, para administradores, usuarios.
+- CRUD de ativos com filtros por termo, nome, responsavel e patrimonio.
+- Exportacao de ativos em arquivo `.txt` com limite de registros.
+- CRUD de perifericos com quantidade por tipo.
+- CRUD de usuarios restrito a administradores.
+- Auditoria de login, logout, criacao, atualizacao, exclusao e acesso negado.
+- API documentavel via Swagger/OpenAPI.
 
+## Tecnologias
 
+### Backend
 
-## Demonstração
+- Java 21
+- Spring Boot 3.5
+- Spring Web
+- Spring Security
+- Spring Data JPA / Hibernate
+- Bean Validation
+- Lombok
+- PostgreSQL em producao
+- H2 em memoria para desenvolvimento local
+- Apache POI preparado para importacao de planilhas
+- Springdoc OpenAPI / Swagger UI
 
-Abaixo estão algumas capturas de tela do sistema no front inicial, ja alterado no momento atual:
+### Frontend
 
-### Dashboard / Lista de Ativos
-![Dashboard](./1.PNG)
+- React 19
+- TypeScript
+- Vite
+- React Router
+- Axios
+- ECharts
+- Lucide React
+- Tailwind CSS
 
-### Cadastro do Ativo
-![Cadastro](./2.PNG)
+## Estrutura Do Projeto
+
+```text
+.
+|-- src/
+|   |-- main/
+|   |   |-- java/com/matheus/controle/ativos/
+|   |   |   |-- config/        # seguranca, CORS e inicializacao
+|   |   |   |-- controller/    # endpoints REST
+|   |   |   |-- exception/     # tratamento de erros
+|   |   |   |-- model/         # entidades, enums e DTOs
+|   |   |   |-- repository/    # Spring Data JPA
+|   |   |   `-- service/       # regras de negocio
+|   |   `-- resources/         # application.properties e profile prod
+|   `-- test/
+|-- frontend/
+|   |-- src/
+|   |   |-- components/
+|   |   |-- hooks/
+|   |   |-- pages/
+|   |   `-- services/
+|   |-- package.json
+|   `-- vite.config.ts
+|-- pom.xml
+|-- Dockerfile
+`-- nixpacks.toml
+```
+
+## Telas Do Sistema
 
 ### Login
-![Login](./3.PNG)
 
+![Tela de login](docs/screenshots/login.png)
 
-## Principais Funcionalidades
+### Dashboard
 
-- **Gestão de Ativos:** Cadastro, edição e exclusão de itens.
-- **Segurança:** Autenticação e autorização para proteger os dados.
-- **Interface Responsiva:** Visual limpo e intuitivo para facilitar o uso cotidiano.
+![Tela de dashboard](docs/screenshots/dashboard.png)
 
+### Ativos
 
-## Como Executar (Localmente)
+![Tela de ativos](docs/screenshots/ativos.png)
 
-Para rodar o projeto em seu ambiente:
+### Perifericos
 
-1. Clone o repositório.
-2. Certifique-se de ter o **Java 21** e **Maven** instalados.
-3. Configure as variáveis de ambiente ou o `application.properties` com suas credenciais do banco de dados.
-4. Execute o comando:
-   ```bash
-   mvn spring-boot:run
-   ```
+![Tela de perifericos](docs/screenshots/perifericos.png)
+
+### Usuarios
+
+![Tela de usuarios](docs/screenshots/usuarios.png)
+
+### Auditoria
+
+![Tela de auditoria](docs/screenshots/auditoria.png)
+
+## Fluxo De Autenticacao
+
+O frontend usa `axios` com `withCredentials: true`, entao a autenticacao nao e feita por JWT. O fluxo atual e:
+
+1. O React busca um token CSRF em `GET /api/auth/csrf`.
+2. O login envia usuario e senha para `POST /api/auth/login`.
+3. O backend valida as credenciais, cria uma sessao HTTP e grava os dados do usuario.
+4. O frontend consulta `GET /api/auth/status` para saber se a sessao continua ativa.
+5. Rotas internas usam `ProtectedRoute`; rotas administrativas usam `AdminRoute`.
+
+## Principais Endpoints
+
+| Recurso | Endpoint | Acesso |
+| --- | --- | --- |
+| Autenticacao | `/api/auth/*` | Publico |
+| Dashboard | `/dashboard` | `ADMIN`, `USER` |
+| Ativos | `/ativos` | `ADMIN`, `USER` |
+| Perifericos | `/perifericos` | `ADMIN`, `USER` |
+| Usuarios | `/usuarios` | `ADMIN` |
+| Auditoria | `/auditorias` | `ADMIN` |
+
+## Banco De Dados
+
+Em desenvolvimento local, o projeto usa H2 em memoria configurado em `src/main/resources/application.properties`.
+
+Em producao, o profile `prod` usa PostgreSQL configurado em `src/main/resources/application-prod.properties`, com variaveis de ambiente:
+
+```env
+DATABASE_URL=jdbc:postgresql://host:porta/banco
+DATABASE_USERNAME=usuario
+DATABASE_PASSWORD=senha
+```
+
+O profile `prod` e ativado no `Dockerfile` e tambem no `nixpacks.toml`.
+
+## Como Rodar Localmente
+
+### Requisitos
+
+- Java 21
+- Maven ou Maven Wrapper
+- Node.js
+- npm
+
+### Backend
+
+Na raiz do projeto:
+
+```bash
+./mvnw spring-boot:run
+```
+
+No Windows:
+
+```bash
+mvnw.cmd spring-boot:run
+```
+
+Por padrao, o backend sobe em:
+
+```text
+http://localhost:8080
+```
+
+Com a configuracao local atual, o usuario administrador inicial e criado a partir de:
+
+```properties
+APP_ADMIN_USERNAME=admin
+APP_ADMIN_PASSWORD=teste12345
+```
+
+### Frontend
+
+Dentro da pasta `frontend`:
+
+```bash
+npm install
+npm run dev
+```
+
+Por padrao, o frontend sobe em:
+
+```text
+http://localhost:5173
+```
+
+O frontend usa `VITE_API_URL` quando a variavel existe. Sem essa variavel, em ambiente local ele aponta para:
+
+```text
+http://localhost:8080
+```
+
+Exemplo de `.env` no frontend:
+
+```env
+VITE_API_URL=http://localhost:8080
+```
+
+## Build
+
+### Backend
+
+```bash
+./mvnw clean package
+```
+
+No Windows:
+
+```bash
+mvnw.cmd clean package
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm run build
+```
