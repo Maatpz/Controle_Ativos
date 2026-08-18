@@ -40,10 +40,10 @@ class AtivoServiceTest {
     void criarAtivoDeveNormalizarPatrimonioSalvarERetornarResponse() {
         AtivoRequestDTO request = new AtivoRequestDTO(
                 " Notebook Dell ",
-                " TI ",
-                " Matheus ",
+                "LA",
+                " SUBACO ",
                 " Notebook ",
-                " pat-001 ",
+                " LOC-001 ",
                 Status.ESTOQUE,
                 "AA:BB:CC:DD:EE:FF",
                 " Equipamento novo ");
