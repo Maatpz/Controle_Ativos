@@ -32,12 +32,6 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final AuditoriaService auditoriaService;
 
-    @Value("${APP_ADMIN_USERNAME:}")
-    private String defaultAdminUsername;
-
-    @Value("${APP_ADMIN_PASSWORD:}")
-    private String defaultAdminPassword;
-
     public PageResponseDTO<UsuarioResponseDTO> listar(int page, int size, String sort) {
         return PageResponseDTO.from(usuarioRepository.findAll(PageRequest.of(page, size, parseSort(sort)))
                 .map(this::toResponseDTO));
@@ -132,33 +126,6 @@ public class UsuarioService {
         resumo.put("admins", usuarioRepository.countByRole(Role.ADMIN));
         resumo.put("users", usuarioRepository.countByRole(Role.USER));
         return resumo;
-    }
-
-    public void initializeDefaultAdmin() {
-        if (defaultAdminUsername == null || defaultAdminUsername.isBlank()) {
-            return;
-        }
-
-        Optional<Usuario> usuarioExistente = usuarioRepository.findByUsernameIgnoreCase(defaultAdminUsername.trim());
-        if (usuarioExistente.isPresent()) {
-            Usuario usuario = usuarioExistente.get();
-            usuario.setAtivo(true);
-            usuario.setRole(Role.ADMIN);
-            if (defaultAdminPassword != null && !defaultAdminPassword.isBlank()
-                    && !passwordEncoder.matches(defaultAdminPassword, usuario.getPassword())) {
-                usuario.setPassword(passwordEncoder.encode(defaultAdminPassword));
-            }
-            usuarioRepository.save(usuario);
-            return;
-        }
-
-        Usuario admin = new Usuario();
-        admin.setUsername(normalizeUsername(defaultAdminUsername));
-        admin.setNome("Administrador");
-        admin.setPassword(passwordEncoder.encode(defaultAdminPassword));
-        admin.setRole(Role.ADMIN);
-        admin.setAtivo(true);
-        usuarioRepository.save(admin);
     }
 
     private Usuario getEntity(UUID id) {
